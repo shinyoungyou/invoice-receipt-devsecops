@@ -1,0 +1,110 @@
+[
+  {
+    "id": "inv_demo_001",
+    "invoiceNumber": "INV-0001",
+    "sellerName": "Earls-style Demo Restaurant",
+    "customerName": "Demo Customer",
+    "currency": "CAD",
+    "status": "unpaid",
+    "items": [
+      {
+        "description": "Classic burger with fries",
+        "quantity": 2,
+        "unitPriceCents": 2400,
+        "lineTotalCents": 4800
+      },
+      {
+        "description": "Caesar salad",
+        "quantity": 1,
+        "unitPriceCents": 1600,
+        "lineTotalCents": 1600
+      },
+      {
+        "description": "Soft drink",
+        "quantity": 2,
+        "unitPriceCents": 450,
+        "lineTotalCents": 900
+      }
+    ],
+    "subtotalCents": 7300,
+    "taxRateBps": 500,
+    "taxCents": 365,
+    "totalCents": 7665,
+    "createdAt": "2026-11-09T18:00:00.000Z",
+    "updatedAt": "2026-11-09T18:00:00.000Z",
+    "paidAt": null,
+    "receiptUrl": null
+  },
+  {
+    "id": "inv_demo_002",
+    "invoiceNumber": "INV-0002",
+    "sellerName": "Demo Donair Shop",
+    "customerName": "Demo Customer",
+    "currency": "CAD",
+    "status": "unpaid",
+    "items": [
+      {
+        "description": "Chicken donair wrap",
+        "quantity": 2,
+        "unitPriceCents": 1299,
+        "lineTotalCents": 2598
+      },
+      {
+        "description": "French fries",
+        "quantity": 1,
+        "unitPriceCents": 499,
+        "lineTotalCents": 499
+      },
+      {
+        "description": "Bottled water",
+        "quantity": 2,
+        "unitPriceCents": 250,
+        "lineTotalCents": 500
+      }
+    ],
+    "subtotalCents": 3597,
+    "taxRateBps": 500,
+    "taxCents": 180,
+    "totalCents": 3777,
+    "createdAt": "2026-11-09T19:00:00.000Z",
+    "updatedAt": "2026-11-09T19:00:00.000Z",
+    "paidAt": null,
+    "receiptUrl": null
+  },
+  {
+    "id": "inv_demo_003",
+    "invoiceNumber": "INV-0003",
+    "sellerName": "Walmart Demo",
+    "customerName": "Demo Customer",
+    "currency": "CAD",
+    "status": "unpaid",
+    "items": [
+      {
+        "description": "Notebook",
+        "quantity": 3,
+        "unitPriceCents": 249,
+        "lineTotalCents": 747
+      },
+      {
+        "description": "Ballpoint pens — pack of 10",
+        "quantity": 1,
+        "unitPriceCents": 397,
+        "lineTotalCents": 397
+      },
+      {
+        "description": "Storage container",
+        "quantity": 2,
+        "unitPriceCents": 799,
+        "lineTotalCents": 1598
+      }
+    ],
+    "subtotalCents": 2742,
+    "taxRateBps": 500,
+    "taxCents": 137,
+    "totalCents": 2879,
+    "createdAt": "2026-11-09T20:00:00.000Z",
+    "updatedAt": "2026-11-09T20:00:00.000Z",
+    "paidAt": null,
+    "receiptUrl": null
+  }
+]
