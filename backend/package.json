@@ -5,14 +5,15 @@
   "description": "Backend bootstrap for the invoice and receipt DevSecOps project",
   "type": "module",
   "engines": {
-    "node": ">=20.6.0 <21"
+    "node": ">=22.16 <23"
   },
   "scripts": {
     "start": "node --env-file=.env server.js",
     "dev": "node --watch --env-file=.env server.js",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage",
-    "check": "node --check app.js && node --check server.js && node --check tests/health.test.js"
+    "check": "node --check app.js && node --check server.js && node --check tests/health.test.js && node --check db/database.js && node --check scripts/init-db.js && node --check tests/database.test.js",
+    "db:init": "node --env-file=.env scripts/init-db.js"
   },
   "dependencies": {
     "express": "^5.1.0"

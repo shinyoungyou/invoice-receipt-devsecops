@@ -5,3 +5,12 @@ node_modules/
 coverage/
 *.log
 .DS_Store
+
+# Local SQLite files and journal sidecars
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
