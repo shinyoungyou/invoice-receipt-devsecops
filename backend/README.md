@@ -1,144 +1,132 @@
-# Invoice and receipt backend
+# Shared invoice backend
 
-Minimal runnable bootstrap for Member 1 and Member 3. It provides an Express app,
-a health endpoint, JSON errors, SQLite initialization and smoke tests. Invoice API, conversion,
-Stripe and PDF features will be added through feature PRs.
+One Express application and one SQLite schema, maintained by two feature owners:
+
+| Owner | Scope | Branch |
+| --- | --- | --- |
+| Member 2 — Backend 1 | Invoice validation/totals, persistence, create/list/detail/search, currency conversion | `feature/backend-invoices` |
+| Member 3 — Backend 2 | Checkout, webhook verification, payment status transitions and PDF receipts | `feature/backend-payments` |
+
+Each owner writes tests and maintains CI for their own area. Member 3 is no longer
+the dedicated test/DevOps owner for the entire team.
 
 ## Setup
 
-Use the latest Node.js 22.x release (minimum 22.16; tested on 22.23.4). From the repository root:
+Use Node.js 22.x, minimum 22.16, with 22.23.4 as the tested team baseline.
+SQLite uses built-in `node:sqlite`; do not reinstall `better-sqlite3`.
 
 ```bash
 cd backend
-nvm install             # installs the Node version in .nvmrc
+nvm install
 nvm use
 npm ci
+```
+
+Only when `.env` does not exist:
+
+```bash
 cp .env.example .env
+```
+
+Keep existing settings and add missing ones manually:
+
+```dotenv
+PORT=3000
+HOST=127.0.0.1
+NODE_ENV=development
+DATABASE_PATH=./data/invoices.db
+```
+
+```bash
 npm run db:init
+npm run check
+npm test
 npm run dev
 ```
 
-The default local address is http://127.0.0.1:3000. Change PORT in .env if needed.
-Set HOST=0.0.0.0 only when the environment needs to accept external connections,
-for example a container. Environment variables supplied by the shell take priority.
-Copy .env.example to .env before starting: the start and dev commands require it.
-No Stripe or other API credentials are needed for this scaffold.
-
-```bash
-curl http://127.0.0.1:3000/api/health
-```
-
-Expected response (HTTP 200):
+The health endpoint is `http://127.0.0.1:3000/api/health` and returns:
 
 ```json
 {"status":"ok","service":"invoice-receipt-backend"}
 ```
 
-## Commands
+Set HOST=0.0.0.0 only when external access is needed, for example in a container.
+No Stripe keys are needed for bootstrap or invoice calculations. Member 3 adds
+payment-only settings to .env.example when that feature is implemented.
 
-| Command | Purpose |
+## Available commands
+
+| Command | What it does |
 | --- | --- |
-| `npm run db:init` | Initialize the local SQLite schema without deleting data |
-| `npm start` | Start the server without watching files |
-| `npm run dev` | Restart automatically after source changes |
-| `npm test` | Run smoke tests using Node's test runner |
-| `npm run check` | Check JavaScript syntax; this is not a linter |
-| `npm run test:coverage` | Print Node's experimental coverage summary |
+| `npm start` | Start the server |
+| `npm run dev` | Watch source files and restart |
+| `npm run db:init` | Initialize SQLite without deleting existing data |
+| `npm run check` | JavaScript syntax checks; not a linter |
+| `npm test` | Discover all backend tests with Node's test runner |
+| `npm run test:coverage` | Print experimental terminal coverage |
 
-Tests use an automatically allocated local port, in-memory or temporary databases, and do not require .env or an
-already running server. Do not commit .env, node_modules or generated coverage.
-Commit package-lock.json so teammates and CI use the same dependency versions.
+The built-in SQLite experimental warning on Node 22 is expected. Tests use
+in-memory or temporary databases and do not need a running server or real API keys.
+The terminal coverage summary is not yet an LCOV report imported by SonarQube.
+Both backend owners must coordinate one compatible coverage setup.
 
-## Files
+## Ownership and endpoints
 
-- app.js: exports the Express app without opening a port.
-- server.js: reads configuration, starts listening and handles shutdown.
-- tests/health.test.js: health, unknown-route and malformed-JSON smoke tests.
-- .env.example: safe example configuration.
-- .nvmrc: shared Node major version for local setup and CI.
-- .gitignore: backend-local exclusions.
+| Endpoint or area | Owner |
+| --- | --- |
+| `POST /api/invoices` | Member 2 |
+| `GET /api/invoices` and `GET /api/invoices/:id` | Member 2 |
+| `GET /api/invoices/:id/conversion?currency=USD` | Member 2 |
+| `POST /api/invoices/:id/checkout` | Member 3 |
+| `POST /api/webhooks/stripe` | Member 3 |
+| `GET /api/invoices/:id/receipt` | Member 3 |
 
-## Handoff to Member 3
+These are implementation targets, not a claim that all endpoints already exist.
+The supplied scaffold implements health and SQLite initialization. The separate
+Commit 1 package adds calculation/validation functions and tests when applied.
 
-Configure Actions with Node 22 and backend as the working directory, then run:
+Use `invoices/` for Member 2's invoice modules and `exchange-rates/` for their
+planned conversion modules. Use `payments/` for Member 3's planned checkout,
+webhook and receipt modules. Keep receipt generation there initially to give
+Member 3 a clear ownership boundary. Existing files do not need a mass reorganization.
 
-```bash
-npm ci
-npm run check
-npm test
-```
+## Shared files and database contract
 
-For setup-node dependency caching, use backend/package-lock.json as the cache
-path when the workflow runs from the repository root. Coverage currently prints
-in the terminal only: Member 3 should configure an LCOV-producing coverage tool
-and SonarQube's report path before claiming coverage is imported into SonarQube.
-These smoke tests do not yet check invoice or payment rules. Add those tests with
-the features; do not add empty placeholder tests that always pass.
+Member 2 coordinates `app.js`, `server.js`, package files and migrations. Member 3
+reviews payment-related changes and supplies the payment router mount. Agree on
+shared-file edits before opening PRs; both may contribute without overwriting
+one another's changes. Commit lockfile changes with new dependencies.
 
-## Handoff to Member 1
+The server exposes a database connection as `app.locals.db`. The initial tables
+are `invoices`, `invoice_items` and `processed_webhook_events`. Relative database
+paths resolve from backend/. Generated data is local and must stay out of Git.
+Schema version 1 is tracked with user_version. Add migrations for future schema
+changes; editing schema.sql alone does not update existing databases.
 
-Add routes before the 404 handler and keep business calculations independently
-testable. Mount the Stripe webhook route with express.raw({ type: 'application/json' })
-before express.json() so signature verification receives the original bytes.
-Keep checkout and receipts in CAD; currency conversion is display-only.
+Member 2 creates unpaid invoices and owns invoice reads/calculations. Member 3
+owns transitions to paid and recording processed Stripe events. M3 must write the
+payment update and processed-event record atomically. Do not maintain separate
+payment copies of invoices. Member 2's detail response must expose current state.
 
-Frontend cross-origin access is not configured in bootstrap. Coordinate a dev
-proxy or explicit allowed frontend origin with Member 2 when integrating.
+Both owners use parameterized queries. Money remains CAD integer cents and UTC
+ISO timestamps are supplied by the app. Derive receiptUrl in the API instead of
+storing it; return null for unpaid invoices.
 
-If bootstrap is still in progress, include these files in Commit 2:
-`chore: scaffold frontend and backend directories`.
-If bootstrap is already shared, add them in a small PR:
-`chore: add runnable backend scaffold`.
+Mount Stripe's raw-body webhook route BEFORE express.json(). Coordinate this
+change in app.js with Member 2; changing parser order can break signatures.
+Mount all application routes before the 404 handler. Keep unexpected internal
+errors out of client responses.
 
-## References
+## Tests and CI
 
-- Express: https://expressjs.com/en/starter/installing/
-- Node CLI and test flags: https://nodejs.org/api/cli.html
+- Member 2 owns calculation, validation, invoice persistence/query and conversion
+  tests, plus shared database bootstrap tests and backend-core CI.
+- Member 3 owns checkout, signature, duplicate-event, payment consistency and
+  receipt tests, plus payment CI.
+- Both backend owners review shared schema tests. Run the full backend suite for
+  shared-file changes and before merge to catch cross-feature regressions.
+- Keep existing Commit 1 tests. Their maintenance transfers to Member 2; do not
+  delete them to match a new role assignment.
 
-## SQLite foundation
-
-The server opens the database on startup and exposes it as `app.locals.db` for
-future route handlers. `npm run db:init` also initializes it explicitly, useful
-for CI. Repeating initialization preserves data. No seed records are inserted.
-
-The initial schema contains `invoices`, `invoice_items`, and
-`processed_webhook_events`. Currency is CAD and status is unpaid or paid.
-Amounts use integer cents; timestamps are UTC ISO strings supplied by the app.
-Use parameterized statements. Backend validation must still check safe arithmetic,
-supported tax rates, text lengths and all business rules.
-
-`DATABASE_PATH` defaults to `./data/invoices.db`, resolved relative to backend/.
-An absolute path or `:memory:` also works. If you already have .env, add the new
-DATABASE_PATH line manually; do not replace your existing settings.
-
-Schema v1 is recorded with SQLite user_version. Do not edit schema.sql expecting
-an existing database to change. Add a versioned migration for later schema edits.
-Unknown schema versions fail rather than silently opening an incompatible schema.
-Each connection enables foreign keys and uses a busy timeout and WAL mode.
-
-Receipt URLs are derived by the API, not stored. Map SQL snake_case columns to the
-camelCase API contract. Later payment logic must atomically mark the invoice paid
-and insert the processed event, using a transaction; the event ID primary key
-alone does not implement the full webhook workflow.
-
-Member 3 can run these from backend/ in CI:
-
-```bash
-npm ci
-cp .env.example .env
-npm run db:init
-npm run check
-npm test
-```
-
-Tests never use DATABASE_PATH from your environment: they explicitly create their
-own in-memory or temporary file databases. Do not commit a generated database.
-SQLite uses Node's built-in `node:sqlite` module. There is no external SQLite
-npm dependency or native addon installation step. Node 22 may print an
-ExperimentalWarning for SQLite; this is a warning, not a failed initialization.
-This package targets Node 22.16+ within Node 22, not Node 22.5 or Node 20.
-The existing SQLite schema and database files remain compatible.
-
-
-Bootstrap commit: `chore: initialize SQLite database setup`.
-CI workflows, detailed business-rule tests, SonarQube and CodeQL remain Member 3's work.
+See [invoice work](invoices/README.md), [payment work](payments/README.md) and
+[workflow ownership](../.github/workflows/README.md).
