@@ -8,12 +8,12 @@ artifact. Conversion tests use fixture rates.
 
 ## Connect the team SonarQube Server
 
-1. On the team's planned EC2-hosted SonarQube server, create a project with
-   key `invoice-receipt-devsecops` and main branch `main`. Use a server URL the
-   workflow runner can reach. For a private VPC, select a runner with VPC access.
-2. Create a project analysis token. In GitHub Actions settings, save it as the
-   repository secret `SONAR_TOKEN` and set the repository variable
-   `SONAR_HOST_URL` to the server's base URL.
+1. Open project `Invoice` on the team's EC2-hosted SonarQube server and confirm
+   its main branch is `main`. The project key is case-sensitive.
+2. Create a project analysis token scoped to `Invoice`. In GitHub Actions
+   settings, save it as the repository secret `SONAR_TOKEN`. Set the repository
+   variable `SONAR_HOST_URL` to the server's HTTPS base URL so the GitHub-hosted
+   runner sends the token over an encrypted connection.
 3. Run **Backend core CI** on `main` after the workflow is merged. The
    SonarQube job uses the backend job's LCOV artifact and waits for the server's
    quality gate. A failed gate fails the job. With no host configured, GitHub
