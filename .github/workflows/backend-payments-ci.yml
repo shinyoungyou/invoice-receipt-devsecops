@@ -1,0 +1,42 @@
+name: Backend payments CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, feature/backend-payments]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  payments:
+    name: Payment checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22.23.4
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Reject committed live Stripe credentials
+        working-directory: .
+        run: |
+          if git grep -nIE '(sk|rk)_live_[0-9A-Za-z]{20,}|whsec_[0-9A-Za-z]{32,}' -- . ':!backend/package-lock.json'; then
+            echo "::error::A Stripe live key or webhook secret is committed. Remove and rotate it."
+            exit 1
+          fi
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - run: npm run check
+      # Stripe is mocked and webhook signatures use a synthetic secret: no keys are needed.
+      - name: Checkout, webhook and receipt tests
+        run: node --test --test-reporter=spec tests/payment-checkout.test.js tests/stripe-webhook.test.js tests/payment-receipt.test.js
+      - name: Full backend suite
+        run: npm test
