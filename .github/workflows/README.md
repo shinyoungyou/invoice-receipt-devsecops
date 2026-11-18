@@ -8,9 +8,9 @@ artifact. Conversion tests use fixture rates.
 
 ## Connect the team SonarQube Server
 
-1. Open project `Invoice` on the team's SonarQube VM and confirm
+1. Open project `invoice` on the team's SonarQube VM and confirm
    its main branch is `main`. The project key is case-sensitive.
-2. Create a project analysis token scoped to `Invoice`. In GitHub Actions
+2. Create a project analysis token scoped to `invoice`. In GitHub Actions
    settings, save it as the repository secret `SONAR_TOKEN`. Set the repository
    variable `SONAR_HOST_URL` to the VM's base URL, including its scheme and
    port. The current VM serves HTTP on port 9000.
