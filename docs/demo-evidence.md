@@ -39,3 +39,11 @@ invoice, found it by seller name, fetched its details and requested its USD
 estimate. The live Bank of Canada response yielded 1904 USD cents using the
 November 18 rate of 1.4326 CAD per USD. The stored invoice was unpaid.
 The automated CI suite uses fixture rates so the assertions are reproducible.
+
+## GitHub Actions verification
+
+The first push of `feature/backend-invoices` at `7f6a61b` passed the
+**Backend checks** job on GitHub. The runner installed the locked dependencies,
+initialized SQLite, checked JavaScript syntax, ran the coverage suite and
+uploaded the `backend-lcov` artifact. The SonarQube job was skipped on this
+feature branch. [Backend core CI run](https://github.com/shinyoungyou/invoice-receipt-devsecops/actions/runs/44400692142)
