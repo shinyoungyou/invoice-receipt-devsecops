@@ -1,168 +1,102 @@
+# Invoice and receipt API contract
 
-# API Contract — Invoice & Receipt Generator
+The local Express server defaults to `http://127.0.0.1:3000/api`. Send JSON
+requests with `Content-Type: application/json`. Monetary amounts use integer
+cents. Member 2 owns invoice and conversion endpoints.
 
-## Overview
+## Create an invoice
 
-The backend provides REST APIs for creating invoices,
-retrieving invoice details, generating payment links,
-and downloading receipts.
-
-Base URL (development): http://localhost:4000/api
-
-All monetary values are represented as integer cents
-in CAD to avoid floating-point precision errors.
-
-## Invoice Data Model
-
-Example invoice:
+`POST /api/invoices`
 
 ```json
 {
-  "id": "inv_001",
-  "customerName": "John Doe",
-  "customerEmail": "john@example.com",
+  "sellerName": "Demo Donair Shop",
+  "customerName": "Demo Customer",
+  "taxRateBps": 500,
+  "items": [
+    { "description": "Chicken donair", "quantity": 2, "unitPriceCents": 1299 }
+  ]
+}
+```
+
+Both names must contain 1–200 characters after trimming. Supply 1–100 items
+with a trimmed description of 1–500 characters, an integer quantity from 1
+through 1,000,000 and a nonnegative safe integer price. `currency` is optional
+and defaults to `CAD`, the only accepted value. `taxRateBps` is required and
+accepts 0 or 500. Extra fields at either level produce a validation error.
+
+The server adds line amounts, rounds tax half up once on the subtotal, and
+checks every monetary result fits a JavaScript safe integer. A zero-total
+invoice is valid. For the example above the subtotal is 2598 cents, tax is 130
+cents and the total is 2728 cents.
+
+Success returns HTTP 201, a `Location` header pointing to the detail endpoint
+and the full unpaid invoice. See [complete response examples](sample-invoice.json).
+Treat IDs and invoice numbers as opaque strings. Timestamps are UTC ISO strings.
+
+## Read and search
+
+`GET /api/invoices/:id` returns HTTP 200 with the full invoice and ordered
+items. `status`, `updatedAt` and `paidAt` reflect the stored payment state.
+`receiptUrl` is null while unpaid and is `/api/invoices/:id/receipt` when paid.
+
+`GET /api/invoices?q=donair&limit=50&offset=0` returns HTTP 200 and an array
+of invoice summaries with the same fields as detail except for `items`. The
+default limit is 50, the maximum is 100 and the default offset is 0. Results
+are newest first, breaking ties by descending ID. The optional trimmed `q`
+matches a literal substring in the invoice number, seller name or customer
+name using SQLite's ASCII case folding. An empty result is `[]`.
+
+## Estimate the total in USD
+
+`GET /api/invoices/:id/conversion?currency=USD` returns HTTP 200 with a dated
+display estimate. USD is the default and the only supported target. For an
+illustrative rate of 1.2500 CAD per USD, the response for the example above is
+
+```json
+{
+  "invoiceId": "inv_demo_001",
   "currency": "CAD",
-  "items": [
-    {
-      "description": "Web Development",
-      "quantity": 2,
-      "unitPriceCents": 5000
-    }
-  ],
-  "taxRateBasisPoints": 500,
-  "subtotalCents": 10000,
-  "taxCents": 500,
-  "totalCents": 10500,
-  "status": "unpaid"
+  "totalCents": 2728,
+  "estimatedCurrency": "USD",
+  "estimatedTotalCents": 2182,
+  "cadPerUsd": "1.2500",
+  "rateDate": "2026-11-09",
+  "source": "Bank of Canada"
 }
 ```
 
-The backend calculates and returns all totals.
-Client-provided totals must not be trusted.
+The server divides CAD cents by the published `FXUSDCAD` rate and rounds half
+up to the nearest USD cent. Display “Estimated USD equivalent — charged in CAD.”
+If the rate service is unavailable, the UI can continue with the stored CAD
+invoice. [Bank of Canada daily exchange rates](https://www.bankofcanada.ca/rates/exchange/daily-exchange-rates/)
 
-## API Endpoints
+## Errors
 
-### 1. Create Invoice
+Errors use `{"error":{"code":"…","message":"…"}}`. Invalid invoice input also
+includes a `field`, for example `items[0].quantity`.
 
-POST /api/invoices
+| HTTP | Code | Meaning |
+| --- | --- | --- |
+| 400 | `INVALID_INVOICE` | Invalid or unexpected invoice field, or a calculated amount exceeds the safe range |
+| 400 | `INVALID_QUERY` | Unsupported conversion currency or invalid list parameters |
+| 400 / 413 | `INVALID_JSON` / `BODY_TOO_LARGE` | Malformed JSON or request exceeds the server body limit |
+| 404 | `INVOICE_NOT_FOUND` | No invoice with that ID |
+| 422 | `ESTIMATE_OUT_OF_RANGE` | Converted USD amount exceeds the safe integer range |
+| 503 | `RATE_UNAVAILABLE` | Bank of Canada returned no usable rate or the request timed out |
 
-Request:
-```json
-{
-  "customerName": "John Doe",
-  "customerEmail": "john@example.com",
-  "items": [
-    {
-      "description": "Web Development",
-      "quantity": 2,
-      "unitPriceCents": 5000
-    }
-  ],
-  "taxRateBasisPoints": 500
-}
-```
+## Payment and receipt handoff
 
-Response: 201 Created
+Member 3 owns these planned endpoints. The backend README calls the checkout
+endpoint `POST /api/invoices/:id/checkout`. The earlier proposed contract called
+it `/payment-link` with a JSON response containing `invoiceId`, `paymentUrl`
+and `status`. Confirm the final checkout contract with Member 3 before wiring the UI.
+Checkout uses Stripe test mode and the stored CAD amount.
 
-Returns the created invoice object.
+`POST /api/webhooks/stripe` verifies the signature, invoice identity, expected
+amount, currency and successful payment. Repeated deliveries must be safe.
+Payment failures leave an unpaid invoice unpaid.
 
-Validation:
-- Customer name and email are required.
-- At least one line item is required.
-- Quantity must be a positive integer.
-- Unit price must be a non-negative integer.
-- Tax rate must be a supported non-negative integer.
-- Calculations must not exceed safe integer limits.
-- All totals are calculated by the backend.
-
-### 2. Get Invoice
-
-GET /api/invoices/:id
-
-Response: 200 OK
-
-Returns the requested invoice.
-
-Response: 404 Not Found if the invoice does not exist.
-
-### 3. Create Payment Link
-
-POST /api/invoices/:id/payment-link
-
-Response: 200 OK
-
-Example:
-```json
-{
-  "invoiceId": "inv_001",
-  "paymentUrl": "https://checkout.stripe.com/example",
-  "status": "unpaid"
-}
-```
-
-The payment URL is generated using Stripe test mode.
-
-The backend must use its stored invoice total rather
-than accepting a payment amount from the client.
-
-### 4. Stripe Webhook
-
-POST /api/webhooks/stripe
-
-Stripe sends payment events to this endpoint.
-
-Requirements:
-- Verify the Stripe webhook signature.
-- Confirm the payment event matches the invoice.
-- Confirm the expected amount and currency.
-- Handle repeated webhook deliveries safely.
-- Mark the invoice as paid only after verification.
-
-### 5. Download Receipt
-
-GET /api/invoices/:id/receipt
-
-Response: 200 OK
-
-Content-Type: application/pdf
-
-Returns a PDF receipt for a paid invoice.
-
-Response: 409 Conflict if the invoice is not paid.
-
-## Invoice Status
-
-- unpaid
-- paid
-
-Payment failures do not mark an invoice as paid.
-
-## Error Response Format
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid invoice amount"
-  }
-}
-```
-
-## Security and Reliability
-
-- Never trust client-provided totals.
-- Use integer cents for monetary calculations.
-- Validate all incoming data.
-- Use parameterized database queries.
-- Keep Stripe secret keys in environment variables.
-- Verify Stripe webhook signatures.
-- Prevent duplicate payment processing.
-- Do not commit credentials or secrets.
-- Apply appropriate invoice access controls before
-  exposing this application beyond a controlled demo.
-
-## Notes
-
-This is the initial proposed API contract.
-Changes affecting frontend and backend integration
-must be discussed and documented before implementation.
+`GET /api/invoices/:id/receipt` serves a paid PDF as `application/pdf`. An
+unpaid invoice returns HTTP 409. Apply appropriate invoice access controls
+before exposing this demo beyond a controlled environment.
