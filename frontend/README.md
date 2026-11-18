@@ -21,9 +21,9 @@ Member 1 owns frontend implementation, frontend tests and frontend CI.
 
 ## Dependencies and handoffs
 
-Member 2's feature branch supplies invoice creation, list/search, detail and
-dated USD estimates. Follow the [backend setup and invoice walkthrough](../backend/README.md)
-to run that branch locally. The default API base is `http://127.0.0.1:3000/api`.
+`main` supplies Member 2's invoice creation, list/search, detail and dated USD
+estimates. Follow the [backend setup and invoice walkthrough](../backend/README.md)
+to run the backend locally. The default API base is `http://127.0.0.1:3000/api`.
 When scaffolding the UI, proxy `/api` from its dev server to
 `http://127.0.0.1:3000` so the browser can use same-origin requests.
 
@@ -34,7 +34,7 @@ its detail URL in `Location`. Use `GET /api/invoices?q=…` for summaries and
 fetch detail for the ordered items. Request the USD estimate separately so a
 rate-service error leaves the CAD invoice usable.
 
-Member 3's checkout and PDF receipt endpoints are on `feature/backend-payments`.
+Member 3's checkout and PDF receipt endpoints are on `main`.
 The [payments contract](../docs/api-contract.md#payments-and-receipts) has the
 checkout response and error codes. After checkout returns, fetch invoice detail
 to get the verified status and receipt URL. Set `CHECKOUT_SUCCESS_URL` and

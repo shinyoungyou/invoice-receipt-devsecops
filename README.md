@@ -6,12 +6,12 @@ Express and SQLite backend implements invoice creation, search, details,
 currency estimates, Stripe test checkout, verified webhooks and PDF receipts.
 The frontend is planned.
 
-## Run the invoice API
+## Run the backend
 
-While Member 2's work is awaiting merge, use this command for a fresh checkout.
+The invoice and payment backends are both on `main`.
 
 ```sh
-git clone --branch feature/backend-invoices https://github.com/shinyoungyou/invoice-receipt-devsecops.git
+git clone https://github.com/shinyoungyou/invoice-receipt-devsecops.git
 cd invoice-receipt-devsecops
 ```
 
@@ -45,9 +45,9 @@ Members 2 and 3 share one Express server, one package.json and one SQLite schema
 
 | Who | What is ready and what comes next |
 | --- | --- |
-| Member 1 | Checkout, webhook and receipt endpoints are on `feature/backend-payments`. Call checkout, send the browser to `checkoutUrl`, then refetch invoice detail on return and show a pending state until it is `paid`. Use `receiptUrl` to download the PDF. See [payments and receipts](docs/api-contract.md#payments-and-receipts). |
-| Member 2 | Please review the shared-file changes on `feature/backend-payments`: the webhook mount before `express.json()` and the payment router in `backend/app.js`, plus the `stripe` and `pdfkit` dependencies. No schema change was needed. |
-| Member 3 | Checkout, verified webhooks, payment state, PDF receipts, payment tests and payment CI are implemented on this branch. Still to do: the live Stripe test-mode rehearsal with the UI, a SonarQube finding review for payment code and the payment demo evidence. See the [payment guide](backend/payments/README.md). |
+| Member 1 | Checkout, webhook and receipt endpoints are on `main`. Call checkout, send the browser to `checkoutUrl`, then refetch invoice detail on return and show a pending state until it is `paid`. Use `receiptUrl` to download the PDF. See [payments and receipts](docs/api-contract.md#payments-and-receipts). |
+| Member 2 | Please review the shared-file changes now on `main`: the webhook mount before `express.json()` and the payment router in `backend/app.js`, plus the `stripe` and `pdfkit` dependencies. No schema change was needed. |
+| Member 3 | Checkout, verified webhooks, payment state, PDF receipts, payment tests and payment CI are merged to `main`. Still to do: the live Stripe test-mode rehearsal with the UI, a SonarQube finding review for payment code and the payment demo evidence. See the [payment guide](backend/payments/README.md). |
 
 ## Scope and money rules
 
@@ -62,10 +62,9 @@ Members 2 and 3 share one Express server, one package.json and one SQLite schema
 
 ## Integration and branches
 
-Members 1 and 3 can develop against the published contract and fixtures while
-the invoice branch is in review. Once it merges, update feature work from
-`main`, connect the UI and payment code to the shared invoices, then rehearse
-the invoice-to-paid-receipt flow together. Use small pull requests into
+The invoice and payment backends are merged to `main`. Member 1 updates
+`feature/frontend` from `main` and connects the UI to the real endpoints, then
+the team rehearses the invoice-to-paid-receipt flow together. Use small pull requests into
 `main`, one teammate review and passing checks. See the [branching strategy](docs/branching-strategy.md).
 
 ## Shared files and security scanning

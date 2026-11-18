@@ -28,10 +28,10 @@ After initial setup:
 
 ## Development dependencies
 
-Member 2's invoice and conversion APIs are available on `feature/backend-invoices`.
-Members 1 and 3 can exercise the API on that branch and use its contract and
-fixtures on their own branches until it merges. All three members verify the
-integrated application. See the [team handoff](../README.md#member-2-handoff).
+Member 2's invoice and conversion APIs and Member 3's checkout, webhook and
+receipt APIs are merged to `main`. Member 1 can build against them by updating
+`feature/frontend` from `main`. All three members verify the integrated
+application. See the [team handoff](../README.md#member-2-handoff).
 
 ## Pull Request Workflow
 
