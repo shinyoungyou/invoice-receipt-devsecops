@@ -27,9 +27,8 @@ third-party code and obscured the team's test results.
 Commit `5a37280` excludes `**/node_modules/**` from coverage. The rerun on
 Node 22.23.4 passed all 21 tests and produced `backend/coverage/lcov.info`
 with seven application source files. The terminal report showed 96.67% line
-coverage among the files loaded by the tests. This is local runner evidence.
-The team can add the actual SonarQube issue and quality-gate results here
-after the EC2 server is available.
+coverage among the files loaded by the tests. The project-wide SonarQube
+coverage from the first submitted analysis appears below.
 
 ## Live conversion smoke test
 
@@ -47,3 +46,26 @@ The first push of `feature/backend-invoices` at `7f6a61b` passed the
 initialized SQLite, checked JavaScript syntax, ran the coverage suite and
 uploaded the `backend-lcov` artifact. The SonarQube job was skipped on this
 feature branch. [Backend core CI run](https://github.com/shinyoungyou/invoice-receipt-devsecops/actions/runs/44400692142)
+
+## First SonarQube analysis
+
+On November 18, 2026, Member 2's first manual scan analyzed commit
+`140af90` on `feature/backend-invoices`, after all 21 backend tests passed.
+SonarQube Community Build recorded that revision on project `invoice`'s
+`main` dashboard and finished processing the report successfully.
+[Scanned commit](https://github.com/shinyoungyou/invoice-receipt-devsecops/commit/140af90dcd9d564f4e03a71aa337cee2400766e0) · [Server task](http://44.249.249.194:9000/api/ce/task?id=04085378-be13-4e12-a060-b18e23b2bd22)
+
+| Measure | Reported result |
+| --- | --- |
+| Quality gate | Passed (`OK`). The first analysis returned an empty condition list. |
+| Project coverage | 91.1% |
+| Duplicated lines | 0.0% |
+| Bugs / vulnerabilities / security hotspots | 0 / 0 / 0 |
+| Open findings | 1 minor code smell |
+
+The scanner reported `javascript:S7773` in `backend/invoices/routes.js` at
+line 14. The invalid-pagination path returns the global `NaN`. The rule
+prefers `Number.NaN`. Both values represent the same invalid-number result.
+The finding concerns maintainability. It was open at this revision. The fix
+and rescan for the before-and-after demo are pending.
+[Scanned line](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/140af90dcd9d564f4e03a71aa337cee2400766e0/backend/invoices/routes.js#L14) · [SonarQube issue S7773](http://44.249.249.194:9000/project/issues?id=invoice&open=812e2a0b-71f6-4d33-a37f-3a5a894e4218) · [Recorded quality gate](http://44.249.249.194:9000/api/qualitygates/project_status?analysisId=b3cf5691-b31f-477c-bbc6-645e979d3471)
