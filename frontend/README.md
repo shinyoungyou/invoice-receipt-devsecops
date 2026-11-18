@@ -34,9 +34,12 @@ its detail URL in `Location`. Use `GET /api/invoices?q=…` for summaries and
 fetch detail for the ordered items. Request the USD estimate separately so a
 rate-service error leaves the CAD invoice usable.
 
-Member 3's checkout, webhook and PDF receipt endpoints are planned. Mock those
-responses until the payment routes are available, then fetch invoice detail
-after checkout returns to get the verified status and receipt URL.
+Member 3's checkout and PDF receipt endpoints are on `feature/backend-payments`.
+The [payments contract](../docs/api-contract.md#payments-and-receipts) has the
+checkout response and error codes. After checkout returns, fetch invoice detail
+to get the verified status and receipt URL. Set `CHECKOUT_SUCCESS_URL` and
+`CHECKOUT_CANCEL_URL` in `backend/.env` to the UI's invoice route; they default
+to `http://localhost:5173/invoices/{INVOICE_ID}?checkout=success|cancelled`.
 
 ## Frontend setup status
 

@@ -81,3 +81,17 @@ its path and test directories to the shared analysis.
 
 Member 1 owns frontend checks and branch protection settings. Member 3 owns
 payment checks and the repository CodeQL workflow.
+
+## Payment checks
+
+Member 3 maintains `backend-payments-ci.yml`. Pull requests to `main`, pushes
+to `main` or `feature/backend-payments`, and manual runs install the locked
+dependencies and then:
+
+1. Fail if a Stripe live key or webhook signing secret is committed.
+2. Run `npm audit --omit=dev --audit-level=high` on runtime dependencies.
+3. Check syntax, run the checkout, webhook and receipt tests with a readable
+   report, then run the full backend suite.
+
+Stripe is mocked and webhook signatures use a synthetic secret, so the job needs
+no repository secrets. See the [payment guide](../../backend/payments/README.md).

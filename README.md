@@ -2,8 +2,9 @@
 
 A team DevSecOps project for creating CAD invoices, estimating their USD value
 and issuing PDF receipts after verified Stripe test payments. The shared Node.js,
-Express and SQLite backend implements invoice creation, search, details and
-currency estimates. The frontend, checkout, webhooks and receipts are planned.
+Express and SQLite backend implements invoice creation, search, details,
+currency estimates, Stripe test checkout, verified webhooks and PDF receipts.
+The frontend is planned.
 
 ## Run the invoice API
 
@@ -16,7 +17,8 @@ cd invoice-receipt-devsecops
 
 Use Node.js 22.23.4 and follow the [backend setup and test request](backend/README.md).
 The API listens at `http://127.0.0.1:3000/api` by default. Local setup and
-tests run independently of Stripe and SonarQube. The live USD estimate uses the
+tests run independently of Stripe and SonarQube. To take a live test-mode
+payment, follow the [payment setup](backend/payments/README.md#run-payments-locally-in-stripe-test-mode). The live USD estimate uses the
 Bank of Canada service.
 
 ## Feature ownership
@@ -38,6 +40,14 @@ Members 2 and 3 share one Express server, one package.json and one SQLite schema
 | Member 1 | Use the invoice and conversion endpoints for the form, list/search and detail screens. The create request and full response examples are in the [API contract](docs/api-contract.md). See the [frontend handoff](frontend/README.md) for UI setup status. |
 | Member 3 | Use `getInvoice(db, id)` to read the stored CAD amount and current payment state. Build checkout, webhook handling and receipts against the same records. See the [payment handoff](backend/payments/README.md). |
 | Member 2 | Invoice validation, tax calculations, SQLite persistence, reads/search, USD conversion, tests, backend CI and SonarQube setup are implemented on this branch. The first manual scan is recorded. The open finding still needs review and the team still needs the post-merge CI scan and joint integration rehearsal. See the [invoice implementation](backend/invoices/README.md) and [demo evidence](docs/demo-evidence.md). |
+
+## Member 3 handoff
+
+| Who | What is ready and what comes next |
+| --- | --- |
+| Member 1 | Checkout, webhook and receipt endpoints are on `feature/backend-payments`. Call checkout, send the browser to `checkoutUrl`, then refetch invoice detail on return and show a pending state until it is `paid`. Use `receiptUrl` to download the PDF. See [payments and receipts](docs/api-contract.md#payments-and-receipts). |
+| Member 2 | Please review the shared-file changes on `feature/backend-payments`: the webhook mount before `express.json()` and the payment router in `backend/app.js`, plus the `stripe` and `pdfkit` dependencies. No schema change was needed. |
+| Member 3 | Checkout, verified webhooks, payment state, PDF receipts, payment tests and payment CI are implemented on this branch. Still to do: the live Stripe test-mode rehearsal with the UI, a SonarQube finding review for payment code and the payment demo evidence. See the [payment guide](backend/payments/README.md). |
 
 ## Scope and money rules
 

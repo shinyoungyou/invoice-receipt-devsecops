@@ -61,8 +61,10 @@ check connectivity. With the defaults it returns
 ```
 
 The invoice API and test suite run with the example settings. Only a live
-USD estimate needs a connection to the Bank of Canada. Stripe setup belongs
-to Member 3's payment feature. SonarQube runs separately from the application
+USD estimate needs a connection to the Bank of Canada. Checkout needs Stripe
+test-mode keys in `.env`; without them checkout and the webhook return
+`503 PAYMENTS_UNAVAILABLE` and everything else works. See the
+[Stripe test-mode setup](payments/README.md#run-payments-locally-in-stripe-test-mode). SonarQube runs separately from the application
 and tests. See the [shared scan instructions](../.github/workflows/README.md).
 
 ## Try an invoice
@@ -116,8 +118,9 @@ Both backend owners use this coverage command. CI uploads the LCOV report.
 | `POST /api/webhooks/stripe` | Member 3 |
 | `GET /api/invoices/:id/receipt` | Member 3 |
 
-The health, invoice and conversion endpoints are implemented on the Member 2
-branch. The checkout, webhook and receipt endpoints are planned. The
+The health, invoice and conversion endpoints are implemented by Member 2.
+The checkout, webhook and receipt endpoints are implemented by Member 3; see
+the [payment guide](payments/README.md). The
 [API contract](../docs/api-contract.md) covers input fields, pagination,
 current payment state and conversion failures. Member 3 can use
 `getInvoice(db, id)` from `invoices/repository.js` for a current invoice and
