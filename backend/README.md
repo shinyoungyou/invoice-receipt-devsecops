@@ -7,28 +7,37 @@ One Express application and one SQLite schema, maintained by two feature owners:
 | Member 2 — Backend 1 | Invoice validation/totals, persistence, create/list/detail/search, currency conversion | `feature/backend-invoices` |
 | Member 3 — Backend 2 | Checkout, webhook verification, payment status transitions and PDF receipts | `feature/backend-payments` |
 
-Each owner writes tests and maintains CI for their own area. Member 3 is no longer
-the dedicated test/DevOps owner for the entire team.
+Each owner writes tests and maintains CI for their own area. Member 2 also
+coordinates the shared SonarQube project and backend coverage report.
 
 ## Setup
 
-Use Node.js 22.x, minimum 22.16, with 22.23.4 as the tested team baseline.
-SQLite uses built-in `node:sqlite`; do not reinstall `better-sqlite3`.
+Start at the repository root in a checkout containing Member 2's invoice
+implementation. Use Node.js 22.23.4 to match CI. The backend accepts Node 22.x
+from 22.16 onward and uses its built-in SQLite driver. With nvm, use
+`nvm install 22.23.4` and `nvm use 22.23.4` to select the team version.
 
 ```bash
 cd backend
-nvm install
-nvm use
+node --version
 npm ci
 ```
 
-Only when `.env` does not exist:
+Create `backend/.env` from the example on first use. Run one of the following
+from `backend/`. On macOS or Linux, use
 
 ```bash
-cp .env.example .env
+if [ ! -f .env ]; then cp .env.example .env; fi
 ```
 
-Keep existing settings and add missing ones manually:
+In Windows PowerShell, use
+
+```powershell
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
+```
+
+If PowerShell blocks `npm.ps1`, run the npm commands as `npm.cmd`, for example
+`npm.cmd ci`. The example configures these local defaults
 
 ```dotenv
 PORT=3000
@@ -44,15 +53,42 @@ npm test
 npm run dev
 ```
 
-The health endpoint is `http://127.0.0.1:3000/api/health` and returns:
+Leave the dev server running. Visit `http://127.0.0.1:3000/api/health` to
+check connectivity. With the defaults it returns
 
 ```json
 {"status":"ok","service":"invoice-receipt-backend"}
 ```
 
-Set HOST=0.0.0.0 only when external access is needed, for example in a container.
-No Stripe keys are needed for bootstrap or invoice calculations. Member 3 adds
-payment-only settings to .env.example when that feature is implemented.
+The invoice API and test suite run with the example settings. Only a live
+USD estimate needs a connection to the Bank of Canada. Stripe setup belongs
+to Member 3's payment feature. SonarQube runs separately from the application
+and tests. See the [shared scan instructions](../.github/workflows/README.md).
+
+## Try an invoice
+
+With the server running on the default port, open a second terminal, run
+`node` and paste the following into its interactive prompt. This saves a
+fictional invoice in the local database and fetches it using the returned ID.
+
+```js
+const invoices = 'http://127.0.0.1:3000/api/invoices'
+const response = await fetch(invoices, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    sellerName: 'Demo Donair Shop', customerName: 'Demo Customer', taxRateBps: 500,
+    items: [{ description: 'Chicken donair', quantity: 2, unitPriceCents: 1299 }]
+  })
+})
+const invoice = await response.json()
+console.log(response.status, invoice.status, invoice.totalCents)
+const detail = await fetch(invoices + '/' + invoice.id)
+console.log(detail.status, (await detail.json()).id === invoice.id)
+```
+
+Expect `201 unpaid 2728` and `200 true`. Enter `.exit` to leave the Node prompt.
+For search and conversion requests, see the [API contract](../docs/api-contract.md).
 
 ## Available commands
 

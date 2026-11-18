@@ -2,7 +2,7 @@
 
 Owner: **Member 3**. Branch: `feature/backend-payments`.
 Own implementation, tests and CI for payment and receipt features inside the
-shared backend. This README defines planned work; it does not add payment code.
+shared backend. The checkout, webhook and receipt routes below are planned.
 
 ## Features
 
@@ -21,14 +21,27 @@ shared backend. This README defines planned work; it does not add payment code.
 
 ## Dependencies and early work
 
-Agree on invoice lookup, current status and transaction boundaries with Member 2.
-The existing schema already has payment-related fields and an event table; reuse
-it. Any additional fields require an agreed migration, not a parallel database.
+Member 2's branch can supply real unpaid invoices for local integration. Follow
+the [backend walkthrough](../README.md#try-an-invoice) to create one and use
+its ID when testing payment routes. From a module in `backend/payments/`, read
+the current invoice inside your Express handler with
 
-Start immediately with synthetic invoice fixtures, mocked Stripe calls, endpoint
-contracts and tests. Real integration depends on Member 2's persisted invoices.
-Send Member 1 the checkout response, pending/paid behavior and receipt response
-contract before frontend integration. Member 1 refetches state after redirects.
+```js
+import { getInvoice } from '../invoices/repository.js';
+
+// Inside the checkout or receipt handler
+const invoice = getInvoice(req.app.locals.db, req.params.id);
+```
+
+The lookup returns `null` for an unknown ID. Otherwise it includes
+`currency`, `totalCents`, `status` and ordered `items`. The shared SQLite
+schema already has payment fields and a `processed_webhook_events` table.
+Use those records for verified payment updates. Member 1 refetches invoice
+detail after a redirect and uses the returned status and receipt URL.
+
+Develop checkout and webhook tests with synthetic invoices and mocked Stripe
+calls. Publish the final checkout response and receipt behavior in the
+[API contract](../../docs/api-contract.md#payment-and-receipt-handoff) for Member 1.
 
 ## Tests owned by Member 3
 
@@ -44,9 +57,10 @@ Run the shared `npm test` suite before merge; shared changes can affect both are
 
 ## DevOps and security work owned by Member 3
 
-Maintain `backend-payments-ci.yml` and its payment checks. Add coverage reporting
-compatible with the shared backend tool chosen with Member 2. Keep Stripe test
-keys/webhook secrets out of Git and never require real credentials for unit tests.
+Add `backend-payments-ci.yml` for the payment checks. Tests named
+`*.test.js` under `backend/tests/` run in the existing backend coverage command,
+`npm run test:coverage`. Member 2 maintains the [shared SonarQube configuration](../../.github/workflows/README.md).
+Keep Stripe test keys and webhook secrets out of Git and use mocks in unit tests.
 Document the test-mode environment variables when implementing the feature.
 
 Coordinate the SINGLE repository-wide CodeQL setup, with input from both teammates.

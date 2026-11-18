@@ -1,15 +1,27 @@
 # Invoice and Receipt Generator
 
-A team DevSecOps project using a frontend, a Node.js/Express backend and
-SQLite. The application will create invoices, display tax and currency estimates,
-open Stripe test checkout and generate PDF receipts after verified payment.
-SonarQube, CodeQL and automated tests support the development workflow.
+A team DevSecOps project for creating CAD invoices, estimating their USD value
+and issuing PDF receipts after verified Stripe test payments. The shared Node.js,
+Express and SQLite backend implements invoice creation, search, details and
+currency estimates. The frontend, checkout, webhooks and receipts are planned.
 
-## Revised division of work
+## Run the invoice API
+
+While Member 2's work is awaiting merge, use this command for a fresh checkout.
+
+```sh
+git clone --branch feature/backend-invoices https://github.com/shinyoungyou/invoice-receipt-devsecops.git
+cd invoice-receipt-devsecops
+```
+
+Use Node.js 22.23.4 and follow the [backend setup and test request](backend/README.md).
+The API listens at `http://127.0.0.1:3000/api` by default. Local setup and
+tests run independently of Stripe and SonarQube. The live USD estimate uses the
+Bank of Canada service.
+
+## Feature ownership
 
 Each member implements, tests and maintains CI checks for their own feature area.
-There is no separate member responsible for everybody else's DevOps or tests.
-This division replaces the previous frontend/backend/dedicated-DevSecOps split.
 
 | Member | Feature ownership | Tests and DevOps | Primary branch |
 | --- | --- | --- | --- |
@@ -17,9 +29,15 @@ This division replaces the previous frontend/backend/dedicated-DevSecOps split.
 | Member 2 | Backend 1: input validation, totals, invoice persistence/create/list/detail/search and exchange-rate API | Calculation, validation, database and conversion tests; backend-core CI | `feature/backend-invoices` |
 | Member 3 | Backend 2: Stripe checkout, verified webhooks, payment state and paid PDF receipts | Payment, webhook and receipt tests; payment CI | `feature/backend-payments` |
 
-Backend 1 and Backend 2 are ownership areas inside the SAME backend application.
-They share one Express server, one package.json and one SQLite database schema.
-Do not create separate servers, databases or duplicate invoice models.
+Members 2 and 3 share one Express server, one package.json and one SQLite schema.
+
+## Member 2 handoff
+
+| Who | What is ready and what comes next |
+| --- | --- |
+| Member 1 | Use the invoice and conversion endpoints for the form, list/search and detail screens. The create request and full response examples are in the [API contract](docs/api-contract.md). See the [frontend handoff](frontend/README.md) for UI setup status. |
+| Member 3 | Use `getInvoice(db, id)` to read the stored CAD amount and current payment state. Build checkout, webhook handling and receipts against the same records. See the [payment handoff](backend/payments/README.md). |
+| Member 2 | Invoice validation, tax calculations, SQLite persistence, reads/search, USD conversion, tests, backend CI and SonarQube setup are implemented on this branch. The first manual scan is recorded. The open finding still needs review and the team still needs the post-merge CI scan and joint integration rehearsal. See the [invoice implementation](backend/invoices/README.md) and [demo evidence](docs/demo-evidence.md). |
 
 ## Scope and money rules
 
@@ -32,68 +50,13 @@ Do not create separate servers, databases or duplicate invoice models.
 - The backend owns totals, payment status and receipt eligibility.
 - A browser success redirect is not proof of payment.
 
-## Runtime and backend setup
+## Integration and branches
 
-Use Node.js 22.x, minimum 22.16; the supplied backend was tested on 22.23.4.
-It uses built-in `node:sqlite`, not `better-sqlite3`. The SQLite experimental
-warning on Node 22 is expected and is not an initialization failure.
-
-```bash
-cd backend
-nvm install
-nvm use
-npm ci
-```
-
-For first-time setup only, copy `.env.example` to `.env`. Preserve existing values
-if you already have `.env`; add missing entries manually.
-
-```bash
-cp .env.example .env
-npm run db:init
-npm run check
-npm test
-npm run dev
-```
-
-Default health endpoint: `http://127.0.0.1:3000/api/health`.
-See [backend setup](backend/README.md) and [frontend work](frontend/README.md).
-The frontend README identifies commands that Member 1 still needs to establish.
-
-## Start in parallel
-
-1. Member 2 publishes the invoice request/response and error shapes. Members 1 and
-   3 review them before writing integration code.
-2. Member 1 builds screens with mocks. Member 2 develops the invoice API. Member 3
-   defines checkout/webhook/receipt interfaces and develops with invoice fixtures.
-3. Merge invoice create/list/detail early. Member 1 replaces mocks and Member 3
-   connects payment logic to the shared invoice records.
-4. Member 2 adds currency conversion; Member 1 integrates its display. Member 3
-   completes checkout, webhook and receipts; Member 1 integrates those flows.
-5. Each member runs their feature tests, fixes their scan findings and brings
-   evidence to a joint end-to-end rehearsal.
-
-## Existing work and branches
-
-The shared bootstrap supplies the Express server and SQLite schema. Member 2's
-`feature/backend-invoices` branch adds validation, totals, the invoice and
-conversion APIs, their tests and backend CI. See the [API contract](docs/api-contract.md)
-for request and response examples.
-
-Once shared foundation work is merged:
-
-```bash
-git switch main
-git pull --ff-only origin main
-# Use only the branch assigned to you:
-git switch -c feature/frontend
-# Member 2: feature/backend-invoices
-# Member 3: feature/backend-payments
-```
-
-Use small PRs into main, one teammate review and configured passing checks.
-After merging a PR, branch from updated main for the next task. Do not continue
-feature development directly on main.
+Members 1 and 3 can develop against the published contract and fixtures while
+the invoice branch is in review. Once it merges, update feature work from
+`main`, connect the UI and payment code to the shared invoices, then rehearse
+the invoice-to-paid-receipt flow together. Use small pull requests into
+`main`, one teammate review and passing checks. See the [branching strategy](docs/branching-strategy.md).
 
 ## Shared files and security scanning
 
@@ -105,9 +68,13 @@ feature development directly on main.
 | Repository-wide CodeQL setup | Member 3 | All members review relevant alerts and fix their own findings |
 | Required checks and final release/demo workflow | Member 1 coordinates repository settings | Each member supplies and maintains their feature checks |
 
-Coordinators prevent duplicate global configurations; they do not take over other
-members' feature tests or CI. Agree on shared-file edits before making them.
-Both scanners remain project deliverables. See [workflow ownership](.github/workflows/README.md).
+The team uses the existing SonarQube project `invoice`. Backend checks run on
+feature pushes to `feature/backend-invoices` and pull requests to `main`.
+The hosted SonarQube job runs on `main` after backend checks pass. To view
+findings, reproduce a scan or maintain the repository credentials, see the
+[SonarQube dashboard](http://44.249.249.194:9000/dashboard?id=invoice) and
+[CI and scanner guide](.github/workflows/README.md). Member 3's CodeQL workflow
+is still planned.
 
 ## Completion criteria
 

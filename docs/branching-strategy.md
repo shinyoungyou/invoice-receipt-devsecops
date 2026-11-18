@@ -28,9 +28,10 @@ After initial setup:
 
 ## Development dependencies
 
-Member 1 can use the API contract and sample responses while Member 2 builds
-invoice endpoints and Member 3 builds payment and receipt features. All three
-members verify the integrated application. See the [team plan](../README.md).
+Member 2's invoice and conversion APIs are available on `feature/backend-invoices`.
+Members 1 and 3 can exercise the API on that branch and use its contract and
+fixtures on their own branches until it merges. All three members verify the
+integrated application. See the [team handoff](../README.md#member-2-handoff).
 
 ## Pull Request Workflow
 
@@ -78,17 +79,13 @@ chore: configure SonarQube analysis
 - Do not merge deliberately vulnerable demo code
   into the stable main branch.
 
-## SonarQube Free-Tier Considerations
+## Branch checks
 
-SonarQube Community Build supports main-branch
-analysis but does not provide the full pull-request
-analysis capabilities of paid editions.
-
-GitHub Actions can run automated tests on pull
-requests independently of SonarQube.
-
-The team should confirm the exact SonarQube edition
-and configure its quality gate accordingly.
+Pull requests to `main` run backend checks. After merge, the workflow on
+`main` also submits the project to SonarQube Community Build and waits for
+the quality gate. A manual scan of a feature checkout appears on the same
+SonarQube `main` dashboard. Use the analysis revision to identify the code
+that was scanned. See the [CI and scanner guide](../.github/workflows/README.md).
 
 ## Merge Conflict Prevention
 

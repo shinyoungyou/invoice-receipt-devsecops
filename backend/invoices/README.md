@@ -36,5 +36,8 @@ Names, search terms, paging values and IDs are bound SQL parameters.
 From `backend/`, run `npm run check`, `npm test` and `npm run test:coverage`.
 The suite covers field validation, tampered input, monetary limits, rollback,
 search and paging, shared payment state, rate direction, rounding and outages.
-The [CI workflow](../../.github/workflows/README.md) publishes the LCOV report.
-See [demo evidence](../../docs/demo-evidence.md) for the local verification results.
+Member 2 maintains backend-core CI and the team's SonarQube configuration.
+The workflow publishes `backend/coverage/lcov.info` and the SonarQube job
+uses it for the quality gate on `main`. Teammates can follow the
+[scan instructions](../../.github/workflows/README.md) and review
+the [test and scan evidence](../../docs/demo-evidence.md).

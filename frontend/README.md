@@ -21,22 +21,28 @@ Member 1 owns frontend implementation, frontend tests and frontend CI.
 
 ## Dependencies and handoffs
 
-Start with mocks from the agreed `docs/api-contract.md` and sample JSON.
-Member 2 provides invoice and conversion responses; Member 3 provides checkout,
-payment-state and receipt behavior. Do not invent incompatible field names.
-The sample invoice response includes server-owned fields; construct a create
-request containing only accepted input fields.
+Member 2's feature branch supplies invoice creation, list/search, detail and
+dated USD estimates. Follow the [backend setup and invoice walkthrough](../backend/README.md)
+to run that branch locally. The default API base is `http://127.0.0.1:3000/api`.
+When scaffolding the UI, proxy `/api` from its dev server to
+`http://127.0.0.1:3000` so the browser can use same-origin requests.
 
-Connect the real invoice UI after Member 2's create/list/detail PR merges.
-Integrate payment after Member 3 publishes the checkout and webhook contract.
-Coordinate a frontend development proxy or explicit allowed origin with Member 2.
+Use the [create request](../docs/api-contract.md#create-an-invoice) for
+`POST /api/invoices` and the [sample responses](../docs/sample-invoice.json)
+for UI fixtures. A successful create returns the full unpaid invoice and
+its detail URL in `Location`. Use `GET /api/invoices?q=…` for summaries and
+fetch detail for the ordered items. Request the USD estimate separately so a
+rate-service error leaves the CAD invoice usable.
+
+Member 3's checkout, webhook and PDF receipt endpoints are planned. Mock those
+responses until the payment routes are available, then fetch invoice detail
+after checkout returns to get the verified status and receipt URL.
 
 ## Frontend setup status
 
-Use Node 22.23.4 consistently with the backend and CI. A frontend structure scaffold was not
-included in the supplied backend packages. These README changes do not add one.
-Member 1 should scaffold the frontend structure, commit its package.json and lockfile, and establish
-these commands before configuring required CI checks:
+This branch contains the frontend plan. Member 1 will scaffold the UI on
+Node 22.23.4 and commit its package.json and lockfile. The planned commands
+below become available with that scaffold.
 
 | Planned command inside frontend/ | Responsibility |
 | --- | --- |
@@ -46,8 +52,8 @@ these commands before configuring required CI checks:
 | `npm test` | Non-interactive UI tests for CI |
 | `npm run lint` | Linting once configured |
 
-Document the actual frontend URL and backend base URL after scaffolding. Do not
-put server-side Stripe or scan secrets in frontend environment variables.
+Document the frontend URL and any proxy settings after scaffolding. Keep
+Stripe and SonarQube credentials on the server or in CI.
 
 ## Tests and DevOps owned by Member 1
 
