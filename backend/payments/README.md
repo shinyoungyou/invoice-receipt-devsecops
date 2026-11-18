@@ -115,7 +115,7 @@ npm test
   coverage are part of `npm run test:coverage`, so payment code reaches the
   SonarQube quality gate through Member 2's existing job on `main`.
 
-What scanning cannot replace: SonarQube looks for code patterns. They
+What scanning cannot replace: SonarQube looks for code patterns. It
 cannot tell whether a paid amount matches the invoice, whether a duplicate event
 is harmless or whether a failed write rolls back. The webhook and checkout tests
 above check that behavior.

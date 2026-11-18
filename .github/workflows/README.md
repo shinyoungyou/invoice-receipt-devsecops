@@ -80,7 +80,8 @@ When the frontend suite exists, Member 1 can upload its LCOV report and add
 its path and test directories to the shared analysis.
 
 Member 1 owns frontend checks and branch protection settings. Member 3 owns
-payment checks and the repository CodeQL workflow.
+payment checks. SonarQube is the team's only code scanner; the project does not
+use CodeQL.
 
 ## Payment checks
 

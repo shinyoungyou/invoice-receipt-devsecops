@@ -16,8 +16,8 @@ Capture failures before fixing them and save the passing rerun afterward.
 | Member 3 | Checkout, webhooks, payment state, receipts and payment CI |
 
 Each member should contribute at least one meaningful before-and-after example.
-The team should also prepare its planned SonarQube and CodeQL demonstrations.
-Not every member needs a finding from both scanners. Do not introduce bugs into
+The team should also prepare its planned SonarQube demonstration.
+Not every member needs a SonarQube finding. Do not introduce bugs into
 main to produce evidence; use a clearly labeled disposable sample when needed.
 
 ## Example 1 — Failed tax calculation test
@@ -149,7 +149,7 @@ Do not copy illustrative results as if they happened.
 | Date and branch | |
 | Failing commit / PR | |
 | Tool and command or scan configuration | |
-| Test name or scanner rule/query ID | |
+| Test name or SonarQube rule ID | |
 | Reported classification and severity, if applicable | |
 | Failure / finding / warning message | |
 | Expected behavior | |
@@ -191,7 +191,7 @@ prove the finding disappeared or that the quality gate passed.>
 ## Evidence handling checklist
 
 - Capture the initial failure before changing the code.
-- Keep the test name or exact scanner rule/query ID and source commit.
+- Keep the test name or exact SonarQube rule ID and source commit.
 - Use filenames such as `member2-tax-rounding-before.png` and
   `member2-tax-rounding-after.png`; store screenshots under `docs/evidence/` if
   appropriate, or link to retained CI artifacts.
@@ -199,7 +199,7 @@ prove the finding disappeared or that the quality gate passed.>
 - Remove tokens, Stripe secrets, personal information and unrelated private data.
 - Do not treat an expected SQLite ExperimentalWarning as a security vulnerability
   or a failed test. It can be documented as an environment note if relevant.
-- For CodeQL evidence, use the same template and record the real query ID, alert
-  location, review decision and result of the follow-up analysis.
+- For SonarQube evidence, use the same template and record the real rule ID,
+  issue location, review decision and result of the follow-up analysis.
 - Rehearse with real evidence. Clearly label any deliberately unsafe disposable
   demonstration sample and keep it out of stable application code.

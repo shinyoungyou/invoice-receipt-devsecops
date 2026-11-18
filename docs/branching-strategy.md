@@ -24,7 +24,7 @@ After initial setup:
 | --- | --- | --- |
 | 1 | `feature/frontend` | UI, frontend tests and CI |
 | 2 | `feature/backend-invoices` | Invoice and currency APIs, backend-core CI and shared SonarQube configuration |
-| 3 | `feature/backend-payments` | Checkout, webhooks, receipts, payment CI and shared CodeQL configuration |
+| 3 | `feature/backend-payments` | Checkout, webhooks, receipts and payment CI |
 
 ## Development dependencies
 
@@ -81,7 +81,7 @@ chore: configure SonarQube analysis
 
 ## Branch checks
 
-Pull requests to `main` run backend checks. After merge, the workflow on
+Pull requests to `main` run backend checks and payment checks. After merge, the workflow on
 `main` also submits the project to SonarQube Community Build and waits for
 the quality gate. A manual scan of a feature checkout appears on the same
 SonarQube `main` dashboard. Use the analysis revision to identify the code

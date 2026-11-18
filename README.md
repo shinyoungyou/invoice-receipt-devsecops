@@ -74,25 +74,26 @@ the invoice-to-paid-receipt flow together. Use small pull requests into
 | --- | --- | --- |
 | `backend/app.js`, `server.js`, package files and database migrations | Member 2 | Member 3 reviews backend integration and contributes payment changes |
 | `docs/api-contract.md` | Member 2 maintains the document | M2 owns invoice/conversion sections; M3 owns payment/receipt sections; M1 reviews UI impact |
-| Repository-wide SonarQube setup | Member 2 | All members configure relevant coverage, fix their own findings and explain results |
-| Repository-wide CodeQL setup | Member 3 | All members review relevant alerts and fix their own findings |
+| Repository-wide SonarQube setup | Member 2 | All members configure relevant coverage, fix their own findings and explain results. Member 3 reviews payment-code findings. |
 | Required checks and final release/demo workflow | Member 1 coordinates repository settings | Each member supplies and maintains their feature checks |
 
+SonarQube is the team's only code scanner; the project does not use CodeQL.
 The team uses the existing SonarQube project `invoice`. Backend checks run on
 feature pushes to `feature/backend-invoices` and pull requests to `main`.
+Payment checks run on pushes to `feature/backend-payments` and pull requests
+to `main`. Both suites feed the same backend coverage report.
 The hosted SonarQube job runs on `main` after backend checks pass. To view
 findings, reproduce a scan or maintain the repository credentials, see the
 [SonarQube dashboard](http://44.249.249.194:9000/dashboard?id=invoice) and
-[CI and scanner guide](.github/workflows/README.md). Member 3's CodeQL workflow
-is still planned.
+[CI and scanner guide](.github/workflows/README.md).
 
 ## Completion criteria
 
 A teammate can clone, initialize the database, run checks, create and search an
 invoice, view a dated currency estimate, pay in Stripe test mode and download a
 verified paid CAD receipt. All three members demonstrate their feature, tests,
-CI results and a fix or relevant security review. Rehearse one confirmed finding
-and fix for each scanner and one failed-to-passing automated check.
+CI results and a fix or relevant security review. Rehearse one confirmed
+SonarQube finding and fix and one failed-to-passing automated check.
 
 Never commit `.env`, tokens, Stripe secrets, actual customer data, generated SQLite
 databases, node_modules or generated receipts.
@@ -101,14 +102,13 @@ databases, node_modules or generated receipts.
 ## Record evidence for the final presentation
 
 Each member must record useful examples from their own feature as they work:
-failed tests, CI failures, SonarQube issues or quality-gate failures, and CodeQL
-alerts. Capture the original result before fixing it, then save the change and
+failed tests, CI failures, and SonarQube issues or quality-gate failures. Capture the original result before fixing it, then save the change and
 the rerun result. Do not rely on remembering the issue at presentation time.
 
 For each example, record:
 
 - Date, member and affected feature.
-- Test name or scanner rule/query ID, with the reported message and severity if available.
+- Test name or SonarQube rule ID, with the reported message and severity if available.
 - A screenshot or short log excerpt, plus the relevant commit, PR or CI/scan link.
 - What caused the result and why it mattered to correctness, security or maintainability.
 - What changed to fix it, with a commit or PR link.
@@ -116,8 +116,8 @@ For each example, record:
 
 Keep notes and evidence links in `docs/demo-evidence.md`. Each member should bring
 at least one meaningful before-and-after example from their work; it can be a
-test failure or a relevant scanner finding. The team also needs the planned
-SonarQube and CodeQL demonstrations. Not every warning is a vulnerability: explain
+test failure or a relevant SonarQube finding. The team also needs the planned
+SonarQube demonstration. Not every warning is a vulnerability: explain
 whether it was a bug, security concern, quality issue, configuration problem or
 false positive. If a finding is not fixed, record the review decision and reason
 instead of presenting it as resolved. Remove secrets and personal data from
