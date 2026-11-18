@@ -63,12 +63,11 @@ payment-only settings to .env.example when that feature is implemented.
 | `npm run db:init` | Initialize SQLite without deleting existing data |
 | `npm run check` | JavaScript syntax checks; not a linter |
 | `npm test` | Discover all backend tests with Node's test runner |
-| `npm run test:coverage` | Print experimental terminal coverage |
+| `npm run test:coverage` | Run backend tests and write `coverage/lcov.info` for SonarQube |
 
 The built-in SQLite experimental warning on Node 22 is expected. Tests use
 in-memory or temporary databases and do not need a running server or real API keys.
-The terminal coverage summary is not yet an LCOV report imported by SonarQube.
-Both backend owners must coordinate one compatible coverage setup.
+Both backend owners use this coverage command. CI uploads the LCOV report.
 
 ## Ownership and endpoints
 
@@ -81,14 +80,12 @@ Both backend owners must coordinate one compatible coverage setup.
 | `POST /api/webhooks/stripe` | Member 3 |
 | `GET /api/invoices/:id/receipt` | Member 3 |
 
-These are implementation targets, not a claim that all endpoints already exist.
-The supplied scaffold implements health and SQLite initialization. The separate
-Commit 1 package adds calculation/validation functions and tests when applied.
-
-Use `invoices/` for Member 2's invoice modules and `exchange-rates/` for their
-planned conversion modules. Use `payments/` for Member 3's planned checkout,
-webhook and receipt modules. Keep receipt generation there initially to give
-Member 3 a clear ownership boundary. Existing files do not need a mass reorganization.
+The health, invoice and conversion endpoints are implemented on the Member 2
+branch. The checkout, webhook and receipt endpoints are planned. The
+[API contract](../docs/api-contract.md) covers input fields, pagination,
+current payment state and conversion failures. Member 3 can use
+`getInvoice(db, id)` from `invoices/repository.js` for a current invoice and
+its ordered items. A missing invoice returns `null`.
 
 ## Shared files and database contract
 
@@ -125,8 +122,7 @@ errors out of client responses.
   receipt tests, plus payment CI.
 - Both backend owners review shared schema tests. Run the full backend suite for
   shared-file changes and before merge to catch cross-feature regressions.
-- Keep existing Commit 1 tests. Their maintenance transfers to Member 2; do not
-  delete them to match a new role assignment.
+- Conversion tests use Bank of Canada fixtures and an isolated database.
 
 See [invoice work](invoices/README.md), [payment work](payments/README.md) and
 [workflow ownership](../.github/workflows/README.md).

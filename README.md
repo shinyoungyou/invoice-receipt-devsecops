@@ -75,14 +75,10 @@ The frontend README identifies commands that Member 1 still needs to establish.
 
 ## Existing work and branches
 
-Keep the existing main-branch bootstrap. The earlier backend Commit 1 (validation,
-calculations and its tests) now belongs to Member 2's feature area. Preserve its
-Git authorship and hand it over; do not rewrite it merely to change ownership.
-
-If Commit 1 is already on `feature/backend`, open a small PR containing that work
-and merge after review, then start the revised branches from updated main. If it
-is uncommitted, commit it on its current branch before switching. Do not discard
-changes or cherry-pick the same work again after it has merged.
+The shared bootstrap supplies the Express server and SQLite schema. Member 2's
+`feature/backend-invoices` branch adds validation, totals, the invoice and
+conversion APIs, their tests and backend CI. See the [API contract](docs/api-contract.md)
+for request and response examples.
 
 Once shared foundation work is merged:
 
@@ -122,8 +118,7 @@ CI results and a fix or relevant security review. Rehearse one confirmed finding
 and fix for each scanner and one failed-to-passing automated check.
 
 Never commit `.env`, tokens, Stripe secrets, actual customer data, generated SQLite
-databases, node_modules or generated receipts. Documentation changes describe the
-revised plan; they do not implement missing features or workflows.
+databases, node_modules or generated receipts.
 
 
 ## Record evidence for the final presentation

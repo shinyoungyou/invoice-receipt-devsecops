@@ -20,87 +20,17 @@ After initial setup:
 
 ## Branch Ownership
 
-### Member 1 — Backend
+| Member | Branch | Scope |
+| --- | --- | --- |
+| 1 | `feature/frontend` | UI, frontend tests and CI |
+| 2 | `feature/backend-invoices` | Invoice and currency APIs, backend-core CI and shared SonarQube configuration |
+| 3 | `feature/backend-payments` | Checkout, webhooks, receipts, payment CI and shared CodeQL configuration |
 
-Branch: feature/backend
+## Development dependencies
 
-Responsibilities:
-- Node.js and Express backend
-- Database integration
-- Invoice REST APIs
-- Server-side invoice calculations
-- Stripe test-mode integration
-- Webhook verification
-- PDF receipt generation
-
-Primary directory: backend/
-
-### Member 2 — Frontend
-
-Branch: feature/frontend
-
-Responsibilities:
-- Frontend application
-- Invoice creation form
-- Invoice details and totals
-- Payment link interface
-- Payment status display
-- Receipt download interface
-- Frontend validation and error messages
-
-Primary directory: frontend/
-
-### Member 3 — DevSecOps
-
-Branch: feature/devsecops
-
-Responsibilities:
-- SonarQube configuration
-- GitHub Actions CI workflow
-- Static code analysis
-- Code quality gate integration
-- Automated test execution
-- Security demonstration
-- CI/CD documentation
-
-Primary directories:
-- .github/workflows/
-- docs/
-- SonarQube configuration files
-
-## Development Dependencies
-
-### Step 1 — Initial Setup
-
-Member 1:
-- Create repository.
-- Create shared directory structure.
-- Define initial API contract.
-- Push all three setup commits to main.
-
-### Step 2 — Parallel Development
-
-Member 1:
-- Develop backend APIs and database logic.
-
-Member 2:
-- Develop frontend using mock API responses
-  based on docs/api-contract.md.
-
-Member 3:
-- Configure GitHub Actions.
-- Configure SonarQube.
-- Set up automated checks using sample code.
-
-Members 2 and 3 do not need to wait for
-the backend implementation to finish.
-
-### Step 3 — Integration
-
-- Member 1 completes required backend endpoints.
-- Member 2 connects frontend to backend.
-- Member 3 integrates test and analysis workflows.
-- All members verify the complete application.
+Member 1 can use the API contract and sample responses while Member 2 builds
+invoice endpoints and Member 3 builds payment and receipt features. All three
+members verify the integrated application. See the [team plan](../README.md).
 
 ## Pull Request Workflow
 
@@ -162,9 +92,7 @@ and configure its quality gate accordingly.
 
 ## Merge Conflict Prevention
 
-- Member 1 primarily edits backend/.
-- Member 2 primarily edits frontend/.
-- Member 3 primarily edits CI/CD configuration.
+- Each member maintains the tests and CI checks for their feature area.
 - Discuss changes to shared files before editing.
 - Synchronize branches regularly with main.
 - Do not force-push shared branches without agreement.
