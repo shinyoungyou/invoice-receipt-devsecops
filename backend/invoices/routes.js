@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createInvoice, getInvoice, listInvoices } from './repository.js';
+import { estimateUsdCents } from '../exchange-rates/usd.js';
 
 const router = Router();
 
@@ -36,5 +37,27 @@ router.param('id', (req, res, next, id) => {
 });
 
 router.get('/:id', (_req, res) => res.json(res.locals.invoice));
+
+router.get('/:id/conversion', async (req, res) => {
+  const { currency = 'USD' } = req.query;
+  if (currency !== 'USD' || Object.keys(req.query).some(key => key !== 'currency')) {
+    return res.status(400).json({ error: { code: 'INVALID_QUERY', message: 'The supported estimate currency is USD.' } });
+  }
+  let rate;
+  try {
+    rate = await req.app.locals.latestUsdRate();
+  } catch {
+    return res.status(503).json({ error: { code: 'RATE_UNAVAILABLE', message: 'USD estimate is unavailable.' } });
+  }
+  const invoice = res.locals.invoice;
+  const estimatedTotalCents = estimateUsdCents(invoice.totalCents, rate.cadPerUsd);
+  if (estimatedTotalCents === null) {
+    return res.status(422).json({ error: { code: 'ESTIMATE_OUT_OF_RANGE', message: 'USD amount exceeds the safe integer range.' } });
+  }
+  res.json({
+    invoiceId: invoice.id, currency: invoice.currency, totalCents: invoice.totalCents,
+    estimatedCurrency: 'USD', estimatedTotalCents, ...rate, source: 'Bank of Canada'
+  });
+});
 
 export default router;

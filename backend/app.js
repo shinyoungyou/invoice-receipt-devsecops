@@ -1,8 +1,10 @@
 import express from 'express';
 import invoiceRoutes from './invoices/routes.js';
 import { InvoiceValidationError } from './invoices/validation.js';
+import { createUsdRateProvider } from './exchange-rates/usd.js';
 
 const app = express();
+app.locals.latestUsdRate = createUsdRateProvider();
 app.disable('x-powered-by');
 
 // Mount the future Stripe webhook with express.raw() BEFORE this parser.
