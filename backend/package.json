@@ -11,8 +11,9 @@
     "start": "node --env-file=.env server.js",
     "dev": "node --watch --env-file=.env server.js",
     "test": "node --test",
-    "test:coverage": "node --test --experimental-test-coverage",
-    "check": "node --check app.js && node --check server.js && node --check tests/health.test.js && node --check db/database.js && node --check scripts/init-db.js && node --check tests/database.test.js",
+    "pretest:coverage": "node -e \"require('node:fs').mkdirSync('coverage', { recursive: true })\"",
+    "test:coverage": "cd .. && node --test --experimental-test-coverage --test-coverage-include=\"backend/**/*.js\" --test-coverage-exclude=\"backend/tests/**\" --test-coverage-exclude=\"**/node_modules/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=backend/coverage/lcov.info \"backend/tests/**/*.test.js\"",
+    "check": "node scripts/check.js",
     "db:init": "node --env-file=.env scripts/init-db.js"
   },
   "dependencies": {
