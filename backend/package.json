@@ -17,6 +17,8 @@
     "db:init": "node --env-file=.env scripts/init-db.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "pdfkit": "^0.20.2",
+    "stripe": "^23.1.0"
   }
 }

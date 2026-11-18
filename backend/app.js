@@ -2,19 +2,24 @@ import express from 'express';
 import invoiceRoutes from './invoices/routes.js';
 import { InvoiceValidationError } from './invoices/validation.js';
 import { createUsdRateProvider } from './exchange-rates/usd.js';
+import { paymentRoutes, stripeWebhookRoutes } from './payments/routes.js';
+import { createStripeGateway } from './payments/stripe-gateway.js';
 
 const app = express();
 app.locals.latestUsdRate = createUsdRateProvider();
+app.locals.payments = createStripeGateway();
 app.disable('x-powered-by');
 
-// Mount the future Stripe webhook with express.raw() BEFORE this parser.
+// The Stripe webhook parses its own raw body and must stay BEFORE express.json().
 // Signature verification requires the original request bytes.
+app.use('/api/webhooks/stripe', stripeWebhookRoutes);
 app.use(express.json({ limit: '100kb' }));
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'invoice-receipt-backend' });
 });
 
+app.use('/api/invoices', paymentRoutes);
 app.use('/api/invoices', invoiceRoutes);
 
 app.use((_req, res) => {
