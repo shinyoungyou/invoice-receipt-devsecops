@@ -26,7 +26,7 @@ test('health endpoint returns a successful JSON response', async () => {
 });
 
 test('unimplemented routes return JSON 404', async () => {
-  const response = await fetch(`${baseUrl}/api/invoices`);
+  const response = await fetch(`${baseUrl}/api/unknown-route`);
   assert.equal(response.status, 404);
   assert.equal((await response.json()).error.code, 'NOT_FOUND');
 });
