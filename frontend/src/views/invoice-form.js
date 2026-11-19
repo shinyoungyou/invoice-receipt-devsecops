@@ -1,6 +1,7 @@
 import { createInvoice } from '../api.js';
 import { el } from '../dom.js';
 import { parsePriceToCents } from '../money.js';
+import { link } from './shared.js';
 
 // Limits mirror backend/invoices/validation.js. The backend still validates
 // everything; these checks only give faster, friendlier feedback.
@@ -92,7 +93,8 @@ export function renderInvoiceForm(container, { onCreated }) {
   });
 
   const form = el('form', { class: 'invoice-form space-y-6', novalidate: true, 'aria-labelledby': 'invoice-form-title' }, [
-    el('h1', { id: 'invoice-form-title', class: 'text-2xl font-semibold', text: 'New invoice' }),
+    link('/', '← All invoices', 'text-sm text-indigo-700 underline hover:text-indigo-900'),
+    el('h1', { id: 'invoice-form-title', class: 'text-2xl font-semibold', tabindex: -1, text: 'New invoice' }),
     formError,
     el('div', { class: 'grid gap-4 sm:grid-cols-2' }, [
       field({ label: 'Seller name', name: 'sellerName', input: sellerName }),
