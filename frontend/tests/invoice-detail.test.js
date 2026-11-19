@@ -140,3 +140,21 @@ test('renders nothing more once its request is aborted', async () => {
   expect(await done).toBeNull();
   expect(text('[role="status"]')).toBe('Loading invoice…');
 });
+
+test('an unexpected error after retrying shows a message instead of being lost', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let calls = 0;
+  stubFetch(() => {
+    calls += 1;
+    return calls === 1
+      ? errorResponse(500, 'INTERNAL_ERROR', 'An unexpected error occurred.')
+      : jsonResponse(200, invoice({ items: null }));
+  });
+  await renderInvoiceDetail(container, { id: 'inv_1' });
+
+  container.querySelector('button.retry').click();
+
+  await vi.waitFor(() => expect(text('[role="alert"]')).toContain('Something went wrong while showing this page.'));
+  expect(container.querySelector('button.retry')).toBeNull();
+  consoleError.mockRestore();
+});

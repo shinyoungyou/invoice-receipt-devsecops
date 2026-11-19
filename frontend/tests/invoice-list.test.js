@@ -179,3 +179,35 @@ test('renders nothing more once its request is aborted', async () => {
   expect(container.querySelector('[role="status"]').textContent).toBe('Loading invoices…');
   expect(container.querySelector('[role="alert"]')).toBeNull();
 });
+
+test('an unexpected error after retrying shows a message instead of being lost', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let calls = 0;
+  stubFetch(() => {
+    calls += 1;
+    return calls === 1
+      ? errorResponse(500, 'INTERNAL_ERROR', 'An unexpected error occurred.')
+      : jsonResponse(200, [summary({ totalCents: 'not cents' })]);
+  });
+  await renderInvoiceList(container);
+
+  container.querySelector('button.retry').click();
+
+  await vi.waitFor(() => expect(container.textContent).toContain('Something went wrong while showing this page.'));
+  expect(consoleError).toHaveBeenCalledWith(expect.any(TypeError));
+  consoleError.mockRestore();
+});
+
+test('an unexpected error from "Load more" shows a message instead of being lost', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const full = Array.from({ length: PAGE_SIZE }, (_, i) => summary({ id: `inv_${i}` }));
+  stubFetch(url => url.includes('offset=0')
+    ? jsonResponse(200, full)
+    : jsonResponse(200, [summary({ totalCents: 1.5 })]));
+  await renderInvoiceList(container);
+
+  container.querySelector('.load-more').click();
+
+  await vi.waitFor(() => expect(container.textContent).toContain('Something went wrong while showing this page.'));
+  consoleError.mockRestore();
+});

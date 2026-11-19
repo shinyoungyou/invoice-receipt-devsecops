@@ -110,3 +110,15 @@ test('leaving a page cancels its request so a late response cannot replace the n
   expect(slowSignal.aborted).toBe(true);
   expect(heading()).toBe('New invoice');
 });
+
+test('an unexpected error while rendering shows a message instead of a stuck loading screen', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  // A malformed invoice (items missing) makes the detail view throw a TypeError.
+  await start('/invoices/inv_1', () => jsonResponse(200, invoice({ items: null })));
+
+  await vi.waitFor(() => expect(app().querySelector('[role="alert"]')).not.toBeNull());
+  expect(app().textContent).toContain('Something went wrong while showing this page.');
+  expect(app().querySelector('[role="status"]')).toBeNull();
+  expect(consoleError).toHaveBeenCalledWith(expect.any(TypeError));
+  consoleError.mockRestore();
+});
