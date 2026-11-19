@@ -9,9 +9,9 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-test('renders the invoices heading into #app', async () => {
+test('renders the new invoice form into #app', async () => {
   await import('../src/main.js');
 
   const heading = document.querySelector('#app h1');
-  expect(heading?.textContent).toBe('Invoices');
+  expect(heading?.textContent).toBe('New invoice');
 });
