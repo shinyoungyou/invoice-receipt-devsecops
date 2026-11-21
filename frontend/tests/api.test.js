@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   ApiError,
   createInvoice,
+  downloadReceipt,
   getInvoice,
   getUsdEstimate,
   listInvoices,
@@ -143,5 +144,72 @@ describe('errors', () => {
     fetchMock.mockRejectedValue(abort);
 
     await expect(listInvoices()).rejects.toBe(abort);
+  });
+});
+
+describe('downloadReceipt', () => {
+  const pdf = (headers = {}) => new Response('%PDF-1.4 demo', {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="receipt-INV-0001.pdf"',
+      ...headers
+    }
+  });
+
+  test('downloads the PDF with the file name from the server', async () => {
+    fetchMock.mockResolvedValue(pdf());
+
+    const { blob, filename } = await downloadReceipt('inv/1');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/invoices/inv%2F1/receipt');
+    expect(init.headers.Accept).toBe('application/pdf');
+    expect(await blob.text()).toBe('%PDF-1.4 demo');
+    expect(filename).toBe('receipt-INV-0001.pdf');
+  });
+
+  test('cleans unsafe characters out of the file name', async () => {
+    fetchMock.mockResolvedValue(pdf({ 'Content-Disposition': 'attachment; filename="../../etc/pass wd.pdf"' }));
+
+    const { filename } = await downloadReceipt('inv_1');
+
+    expect(filename).toBe('.._.._etc_pass_wd.pdf');
+    expect(filename).not.toContain('/');
+  });
+
+  test('falls back to the given name and always ends in .pdf', async () => {
+    fetchMock.mockResolvedValue(pdf({ 'Content-Disposition': 'attachment' }));
+
+    const { filename } = await downloadReceipt('inv_1', { fallbackName: 'receipt-INV-0001' });
+
+    expect(filename).toBe('receipt-INV-0001.pdf');
+  });
+
+  test('a receipt requested before payment fails with INVOICE_NOT_PAID', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(409, {
+      error: { code: 'INVOICE_NOT_PAID', message: 'Invoice is not paid.' }
+    }));
+
+    await expect(downloadReceipt('inv_1')).rejects.toMatchObject({
+      status: 409,
+      code: 'INVOICE_NOT_PAID',
+      message: 'Invoice is not paid.'
+    });
+  });
+
+  test('a response that is not a PDF is rejected', async () => {
+    fetchMock.mockResolvedValue(new Response('<html></html>', {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' }
+    }));
+
+    await expect(downloadReceipt('inv_1')).rejects.toMatchObject({ code: 'UNEXPECTED_RESPONSE' });
+  });
+
+  test('a network failure becomes NETWORK_ERROR', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    await expect(downloadReceipt('inv_1')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
   });
 });

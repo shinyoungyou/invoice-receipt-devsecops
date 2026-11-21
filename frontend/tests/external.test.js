@@ -26,3 +26,31 @@ test('goToStripeCheckout sends the browser to the given URL', async () => {
   expect(assign).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_a1B2c3');
   vi.unstubAllGlobals();
 });
+
+test('saveFile downloads the blob under the given name and releases it afterwards', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout'] });
+  const { saveFile } = await import('../src/external.js');
+  const createObjectURL = vi.fn(() => 'blob:receipt');
+  const revokeObjectURL = vi.fn();
+  vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
+  const clicked = [];
+  const onClick = event => {
+    event.preventDefault();
+    clicked.push({ href: event.target.getAttribute('href'), download: event.target.download });
+  };
+  document.addEventListener('click', onClick);
+  const blob = new Blob(['%PDF'], { type: 'application/pdf' });
+
+  saveFile(blob, 'receipt-INV-0001.pdf');
+
+  expect(createObjectURL).toHaveBeenCalledWith(blob);
+  expect(clicked).toEqual([{ href: 'blob:receipt', download: 'receipt-INV-0001.pdf' }]);
+  expect(document.querySelector('a[download]')).toBeNull();
+  expect(revokeObjectURL).not.toHaveBeenCalled();
+  vi.runAllTimers();
+  expect(revokeObjectURL).toHaveBeenCalledWith('blob:receipt');
+
+  document.removeEventListener('click', onClick);
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});

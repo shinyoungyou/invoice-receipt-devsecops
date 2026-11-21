@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { goToStripeCheckout } from '../src/external.js';
+import { goToStripeCheckout, saveFile } from '../src/external.js';
 import { renderInvoiceDetail } from '../src/views/invoice-detail.js';
 import { POLL_ATTEMPTS, POLL_INTERVAL_MS, showPayment } from '../src/views/payment.js';
 import { abortableFetch, errorResponse, invoice, jsonResponse, withConversion } from './support/fixtures.js';
 
 vi.mock('../src/external.js', async importOriginal => ({
   ...(await importOriginal()),
-  goToStripeCheckout: vi.fn()
+  goToStripeCheckout: vi.fn(),
+  saveFile: vi.fn()
 }));
 
 const STRIPE_URL = 'https://checkout.stripe.com/c/pay/cs_test_a1B2c3';
@@ -49,6 +50,7 @@ beforeEach(() => {
   document.body.append(section);
   onPaid = vi.fn();
   vi.mocked(goToStripeCheckout).mockClear();
+  vi.mocked(saveFile).mockClear();
 });
 
 afterEach(() => {
@@ -250,4 +252,77 @@ test('the detail page redraws as paid once polling sees the payment', async () =
   expect(container.querySelector('.status-badge').textContent).toBe('Paid');
   expect(container.querySelector('.payment-message').textContent).toMatch(/^Payment confirmed\. Paid on /);
   container.remove();
+});
+
+describe('receipt', () => {
+  const pdfResponse = () => new Response('%PDF-1.4', {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="receipt-INV-0001.pdf"'
+    }
+  });
+  const receiptButton = () => section.querySelector('button.download-receipt');
+  const receiptError = () => section.querySelector('.receipt-error');
+
+  test('an unpaid invoice has no receipt button', () => {
+    stubFetch(() => jsonResponse(201, session()));
+
+    show();
+
+    expect(receiptButton()).toBeNull();
+  });
+
+  test('a paid invoice without a receipt URL says the receipt is not ready', () => {
+    show({ invoice: invoice({ status: 'paid', paidAt: '2026-11-19T19:30:00.000Z', receiptUrl: null }) });
+
+    expect(receiptButton()).toBeNull();
+    expect(section.textContent).toContain('The receipt is not available yet.');
+  });
+
+  test('a paid invoice downloads its PDF receipt', async () => {
+    let respond;
+    stubFetch(() => new Promise(resolve => { respond = resolve; }));
+    show({ invoice: paidInvoice() });
+
+    receiptButton().click();
+
+    expect(receiptButton().disabled).toBe(true);
+    expect(receiptButton().textContent).toBe('Preparing receipt…');
+    respond(pdfResponse());
+    await vi.waitFor(() => expect(saveFile).toHaveBeenCalledOnce());
+    const [blob, filename] = vi.mocked(saveFile).mock.calls[0];
+    expect(await blob.text()).toBe('%PDF-1.4');
+    expect(filename).toBe('receipt-INV-0001.pdf');
+    expect(requests('GET')[0][0]).toBe('/api/invoices/inv_1/receipt');
+    expect(receiptButton().disabled).toBe(false);
+    expect(receiptButton().textContent).toBe('Download receipt (PDF)');
+    expect(receiptError().hidden).toBe(true);
+  });
+
+  test('a rejected receipt request explains that payment must be confirmed', async () => {
+    stubFetch(() => errorResponse(409, 'INVOICE_NOT_PAID', 'Invoice is not paid.'));
+    show({ invoice: paidInvoice() });
+
+    receiptButton().click();
+
+    await vi.waitFor(() => expect(receiptError().hidden).toBe(false));
+    expect(receiptError().textContent).toBe('The receipt is available once the payment is confirmed.');
+    expect(receiptError().getAttribute('role')).toBe('alert');
+    expect(saveFile).not.toHaveBeenCalled();
+    expect(receiptButton().disabled).toBe(false);
+  });
+
+  test('other receipt errors show the reason, and the message clears on retry', async () => {
+    const answers = [errorResponse(500, 'INTERNAL_ERROR', 'Could not render the PDF.'), pdfResponse()];
+    stubFetch(() => answers.shift());
+    show({ invoice: paidInvoice() });
+
+    receiptButton().click();
+    await vi.waitFor(() => expect(receiptError().textContent).toBe('Could not download the receipt. Could not render the PDF.'));
+
+    receiptButton().click();
+    expect(receiptError().hidden).toBe(true);
+    await vi.waitFor(() => expect(saveFile).toHaveBeenCalledOnce());
+  });
 });
