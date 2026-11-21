@@ -4,10 +4,11 @@ Working notes for Member 1 (frontend). These entries follow the template in
 [`demo-evidence-example.md`](demo-evidence-example.md) and will be merged into
 [`demo-evidence.md`](demo-evidence.md) before the final PR.
 
-Lines marked **TODO** are still to be captured. Do not present them as results
-until they are filled in from real runs.
+Lines marked **TODO** are still to be captured. Only the first `main` run after
+the PR merges remains. Do not present it as a result until it is filled in from
+a real run.
 
-Screenshots and logs go in `docs/evidence/` with the `m1-` prefix.
+Screenshots are in [`docs/evidence/`](evidence/) with the `m1-` prefix.
 
 ## Summary: from first failure to passing gate
 
@@ -20,9 +21,9 @@ All scans used a local SonarQube Community Build (v26.11) with project
 | 1 | Nov 19, 12:33 | First SonarQube scan of `2401950` | **Finding.** 4 open issues (3 × `javascript:S9383`, 1 × `javascript:S7773`), Reliability C. The gate passed because a first analysis has no new code to judge | E01 |
 | 2 | Nov 19, 13:27 | Local tests before the fix | **Failure.** The 4 new regression tests failed against the unfixed source, with 4 unhandled rejections | E01 |
 | 3 | Nov 19, 13:27 | Frontend CI on `f8d5a4c` | **Failure.** The commit contained only the tests; the source fix was still in `git stash`. 4 failed, 133 passed | E02 |
-| 4 | Nov 21 | Frontend CI on the follow-up commit `a9f98a6` | **TODO:** confirm green and add the run link | E02 |
+| 4 | Nov 21 | Frontend CI on the follow-up commit `a9f98a6` | **Passed.** The commit list shows ✓ 1/1 for `a9f98a6` and ✗ 0/1 for `f8d5a4c` | E02 |
 | 5 | Nov 21, 1:43 PM | Second SonarQube scan, after the follow-up commit | **Quality gate failed.** The fix introduced 1 new `S9383` issue (`invoice-list.js:94`). "New issues" was 1, and the gate requires 0 | E03 |
-| 6 | Nov 21 | Commit 11b `de0a6d1`, then the next scans | **Passed.** The scan after `d77c55d` (USD estimate tests) passed with 0 new issues | E03 |
+| 6 | Nov 21, about 1:51 PM | Commit 11b `de0a6d1`, then the third scan | **Passed.** 0 open issues, overall coverage 99.4%, and the L94 issue marked Closed (Fixed) | E03 |
 | 7 | Nov 21 | SonarQube scan of `e4a3f0f` (receipt feature) before its tests were applied | **Quality gate failed.** Coverage on new code was 75.4%, and the gate requires 80% | E04 |
 | 8 | Nov 21 | Commit `f98f29f` (receipt tests), then a rescan | **Passed.** Coverage on new code was 96.9%, with 0 new issues | E04 |
 | 9 | Nov 21 | Full-repository dry run of the team configuration (`03d2515`) on local project `invoice-full-dev` | **Verified.** Backend 94.5% and frontend 98.6% coverage were both imported, with no "Could not resolve" warnings | Pipeline wiring |
@@ -90,11 +91,15 @@ the codebase.
 
 **Before evidence:**
 
-- `docs/evidence/m1-sonar-first-scan.png`: dashboard with Reliability C and 4 issues
-- `docs/evidence/m1-sonar-issue-list.png`: all four issues
-- `docs/evidence/m1-sonar-s9383-main-js.png`: issue detail with rule ID and line 55
-- `docs/evidence/m1-sonar-s7773-form.png`: **TODO**, if it was captured before the second scan
-- `docs/evidence/m1-tests-before-fix.png`: **TODO**, if the terminal output is still available. The 4 new regression tests run against the unfixed source with `git stash push -- frontend/src`. Result: 4 failed, 133 passed, 4 unhandled errors
+- [m1-sonar-first-scan.png](evidence/m1-sonar-first-scan.png): dashboard with Reliability C and 4 issues
+- [m1-sonar-issue-list.png](evidence/m1-sonar-issue-list.png): all four issues
+- [m1-sonar-s9383-main-js.png](evidence/m1-sonar-s9383-main-js.png): issue detail with rule ID and line 55
+- [m1-sonar-s7773-form.png](evidence/m1-sonar-s7773-form.png): issue detail at `invoice-form.js:195`, with rule `javascript:S7773`
+
+The regression tests were also run locally against the unfixed source, using
+`git stash push -- frontend/src`. They gave 4 failed, 133 passed and 4
+unhandled errors. No screenshot was kept; the CI run in E02 shows the same
+result.
 
 **Fix or review decision:**
 
@@ -141,7 +146,7 @@ fix's effect, and the third scan is the final result.
 | Failure / finding / warning message | `TypeError: Cannot read properties of null (reading 'map')` at `renderInvoiceDetail` ← `render src/main.js:37`, reported as an Unhandled Rejection. Also `TypeError: Expected integer cents, got not cents` at `invoiceRow` ← `loadPage` |
 | Expected behavior | The fix commit includes both the source changes and the tests |
 | Observed behavior | The commit contained only the three test files. The source changes were still in a local `git stash` from the before-fix test run. CI reported 4 failed and 133 passed |
-| CI or scan link | **TODO**, the Frontend CI run URL for `f8d5a4c` |
+| CI or scan link | [Frontend CI run for `f8d5a4c`](https://github.com/shinyoungyou/invoice-receipt-devsecops/actions/runs/44608786830/job/135859489935) |
 | Did it actually block merge or release? How? | Yes. The **Frontend checks** job failed on the branch, so the commit could not pass review into `main` |
 
 **Cause and impact:**
@@ -158,9 +163,9 @@ SonarQube flagged as S9383.
 
 **Before evidence:**
 
-- `docs/evidence/m1-ci-f8d5a4c-failed-tests.png`: **TODO**, the test list with the four `×` lines and `Tests  4 failed | 133 passed (137)`
-- `docs/evidence/m1-ci-f8d5a4c-unhandled-rejection.png`: **TODO**, the `Unhandled Rejection` block ending in `render src/main.js:37:23`
-- `docs/evidence/m1-ci-f8d5a4c-failed.log`: full log saved locally, because GitHub deletes Actions logs after the retention period
+- [m1-ci-f8d5a4c-failed-tests.png](evidence/m1-ci-f8d5a4c-failed-tests.png): the failing test and `Tests  4 failed | 133 passed (137)`
+- [m1-ci-f8d5a4c-unhandled-rejection.png](evidence/m1-ci-f8d5a4c-unhandled-rejection.png): the `TypeError` stack trace ending in `render src/main.js:37:23`
+- The full log of that run is saved outside the repo, because GitHub deletes Actions logs after the retention period
 
 **Fix or review decision:**
 
@@ -171,12 +176,12 @@ Follow-up commit: `a9f98a6` (`fix: add source changes missing from f8d5a4c`).
 
 **Verification:**
 
-- **TODO**, the green Frontend CI run URL for the follow-up commit
-- **TODO:** confirm `git grep -n "Number.NaN" HEAD -- frontend/src` finds the change
+- The branch's commit list shows Frontend CI ✓ 1/1 on `a9f98a6` and ✗ 0/1 on `f8d5a4c`
+- Locally, 137 tests passed on `a9f98a6`
 
 **After evidence:**
 
-- `docs/evidence/m1-ci-followup-passed.png`: **TODO**
+- [m1-ci-followup-passed.png](evidence/m1-ci-followup-passed.png): the commit list with the red and green checks
 
 **Presentation talking points:**
 
@@ -226,8 +231,8 @@ the intent explicit, so fixing it was better than marking it "Accepted."
 
 **Before evidence:**
 
-- `docs/evidence/m1-sonar-gate-failed-new-code.png`: New Code tab with the gate Failed, "New issues 1, Required = 0", coverage 95.7%
-- `docs/evidence/m1-sonar-s9383-list-l94.png`: issue detail at `invoice-list.js:94`, with rule `javascript:S9383`
+- [m1-sonar-gate-failed-new-code.png](evidence/m1-sonar-gate-failed-new-code.png): New Code tab with the gate Failed, "New issues 1, Required = 0", coverage 95.7%
+- [m1-sonar-s9383-list-l94.png](evidence/m1-sonar-s9383-list-l94.png): issue detail at `invoice-list.js:94`, with rule `javascript:S9383`
 
 **Fix or review decision:**
 
@@ -246,15 +251,18 @@ unchanged, and all 137 tests pass.
 **Verification:**
 
 - Local: `npm test` in `frontend/` reports 137 passed, 0 failed on `de0a6d1`
-- Next scheduled scan, after `d77c55d` on November 21, 2026: quality gate **Passed** with 0 new issues. The later scans after `f99ab1e` and `f98f29f` also showed 0 new issues
-- Overall code: **TODO**. Record Reliability and open issues from a screenshot, to compare with C and 4 in E01
-- Fixed issues: **TODO**. The issue list filtered by status Fixed, `http://localhost:9000/project/issues?id=invoice-frontend-dev&issueStatuses=FIXED`, expected to list the 4 original issues and this one
+- Third scan, November 21, 2026, about 1:51 PM: quality gate **Passed**, with 0 open issues, 0.0% duplications, 99.4% overall coverage and 647 lines of code
+- The issue at `invoice-list.js:94` shows "This issue is Closed (Fixed). It was detected in the file below and is no longer being detected."
+- The issue list for open and confirmed issues shows "No Issues. Hooray!"
+- Overall code at the next scan, after `d77c55d`: Security, Reliability and Maintainability all 0 open issues, rated A. In E01 Reliability was C, with 4 open issues
+- Later routine scans also kept the gate passing; see "Routine scans" below
 
 **After evidence:**
 
-- `docs/evidence/m1-sonar-gate-passed-new-code.png`: **TODO**
-- `docs/evidence/m1-sonar-overall-after.png`: **TODO**
-- `docs/evidence/m1-sonar-fixed-issues.png`: **TODO**
+- [m1-sonar-gate-passed-after-fix.png](evidence/m1-sonar-gate-passed-after-fix.png): overview with the gate Passed, 0 issues and 99.4% coverage
+- [m1-sonar-l94-closed-fixed.png](evidence/m1-sonar-l94-closed-fixed.png): the L94 issue marked Closed (Fixed)
+- [m1-sonar-no-open-issues.png](evidence/m1-sonar-no-open-issues.png): "No Issues. Hooray!"
+- [m1-sonar-overall-after.png](evidence/m1-sonar-overall-after.png): Overall Code, with 0 open issues and all ratings A
 
 **Presentation talking points:**
 
@@ -318,8 +326,7 @@ coverage in the same job, immediately before the scan.
 
 **Before evidence:**
 
-- `docs/evidence/m1-sonar-gate-failed-coverage.png`: New Code tab, gate Failed, 75.4%
-- `docs/evidence/m1-coverage-174-tests.png`: **TODO**, optional. The terminal coverage table showing 174 tests and the uncovered receipt lines
+- [m1-sonar-gate-failed-coverage.png](evidence/m1-sonar-gate-failed-coverage.png): New Code tab, gate Failed, 75.4%
 
 **Fix or review decision:**
 
@@ -335,8 +342,8 @@ non-PDF response, `409 INVOICE_NOT_PAID`, the receipt button states and
 
 **After evidence:**
 
-- `docs/evidence/m1-sonar-gate-passed-coverage.png`: New Code tab, gate Passed, 96.9%
-- `docs/evidence/m1-sonar-frontend-final.png`: **TODO**, the Overall Code tab of the finished frontend
+- [m1-sonar-gate-passed-coverage.png](evidence/m1-sonar-gate-passed-coverage.png): New Code tab, gate Passed, 96.9%
+- [m1-sonar-frontend-final.png](evidence/m1-sonar-frontend-final.png): Overall Code of the finished frontend. Gate Passed; Security, Reliability and Maintainability all 0 open issues, rated A; coverage 98.6% on 433 lines to cover; duplications 0.0%; 922 lines of code
 
 **Presentation talking points:**
 
@@ -369,10 +376,33 @@ project key overridden. Run November 21, 2026.
 | `backend/` | 94.5% |
 | `frontend/` | 98.6%, 0 uncovered lines |
 | "Could not resolve" warnings | None |
-| Open issues | 1, expected to be Member 2's `javascript:S7773` at `backend/invoices/routes.js:14` (**TODO:** confirm) |
+| Open issues | 1. This is Member 2's `javascript:S7773` at `backend/invoices/routes.js:14` (`return NaN` in `pageInteger`), introduced before this work. It is not a Member 1 change; Member 2 was told it is still open |
 
-- `docs/evidence/m1-sonar-full-repo-coverage.png`: **TODO**, the Coverage tree with the backend and frontend rows
+- [m1-sonar-full-repo-coverage.png](evidence/m1-sonar-full-repo-coverage.png): the Coverage tree with the backend and frontend rows
+- [m1-sonar-full-repo-open-issue.png](evidence/m1-sonar-full-repo-open-issue.png): the one open issue, Member 2's S7773
 
 **After the PR merges:** **TODO.** Record the first `main` run of the
 **SonarQube quality gate** job, including the frontend steps and the gate
 result, with the run link and a screenshot.
+
+## Routine scans
+
+These scans ran on the local `invoice-frontend-dev` project after each
+feature and its tests. Nothing failed except the E04 scan, so no fixes were
+needed.
+
+| After commit | New code coverage | New issues | Gate | Lines of code |
+| --- | --- | --- | --- | --- |
+| `d77c55d` (USD estimate tests) | 97.9% on 32 new lines | 0 | Passed | 698 |
+| `f99ab1e` (payment tests) | 97.3% on 106 new lines | 0 | Passed (overall coverage 99.0%, all ratings A) | 854 |
+| `e4a3f0f` (receipt feature, scanned before its tests) | 75.4% on 157 new lines | 0 | **Failed**; see E04 | 922 |
+| `f98f29f` (receipt tests) | 96.9% on 157 new lines | 0 | Passed | 922 |
+
+**Manual check of the live USD estimate (November 21, 2026):**
+
+An invoice of $32.52 CAD showed "Estimated USD equivalent — charged in CAD:
+US$22.70" with "Bank of Canada rate 1.4325 CAD per USD, Nov 20, 2026." The
+browser's network tab showed the `conversion?currency=USD` response
+(`estimatedTotalCents: 2270`, `rateDate: "2026-11-20"`). That confirms the
+frontend displays the backend's live Bank of Canada data, not a client-side
+calculation. Screenshot: [m1-usd-estimate-live.png](evidence/m1-usd-estimate-live.png).
