@@ -4,7 +4,7 @@ import { interceptLinks, matchRoute, navigate } from './router.js';
 import { renderInvoiceDetail } from './views/invoice-detail.js';
 import { renderInvoiceForm } from './views/invoice-form.js';
 import { renderInvoiceList } from './views/invoice-list.js';
-import { link } from './views/shared.js';
+import { link, showUnexpectedError } from './views/shared.js';
 
 const app = document.querySelector('#app');
 const APP_NAME = 'Invoice and Receipt Generator';
@@ -17,8 +17,20 @@ async function render({ moveFocus }) {
   current?.abort();
   current = new AbortController();
   const { signal } = current;
-  const route = matchRoute(location.pathname);
 
+  try {
+    await renderRoute(matchRoute(location.pathname), signal);
+  } catch (error) {
+    // A bug in a view must not leave the page stuck on "Loading…".
+    if (!signal.aborted) showUnexpectedError(app, error);
+    return;
+  }
+
+  // After in-app navigation, move focus to the new heading for screen readers.
+  if (moveFocus && !signal.aborted) app.querySelector('h1')?.focus();
+}
+
+async function renderRoute(route, signal) {
   switch (route.name) {
     case 'list': {
       document.title = `Invoices · ${APP_NAME}`;
@@ -45,11 +57,11 @@ async function render({ moveFocus }) {
         link('/', 'Go to all invoices')
       ]));
   }
-
-  // After in-app navigation, move focus to the new heading for screen readers.
-  if (moveFocus && !signal.aborted) app.querySelector('h1')?.focus();
 }
 
+// render() handles its own errors, so these calls are deliberately not awaited.
 interceptLinks(document.body);
-window.addEventListener('popstate', () => render({ moveFocus: true }));
-render({ moveFocus: false });
+window.addEventListener('popstate', () => {
+  void render({ moveFocus: true });
+});
+void render({ moveFocus: false });

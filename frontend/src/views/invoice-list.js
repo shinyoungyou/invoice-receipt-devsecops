@@ -2,7 +2,7 @@ import { listInvoices } from '../api.js';
 import { el } from '../dom.js';
 import { formatMoney } from '../money.js';
 import { navigate } from '../router.js';
-import { errorBanner, formatDateTime, isAbort, link, loading, statusBadge } from './shared.js';
+import { errorBanner, formatDateTime, isAbort, link, loading, showUnexpectedError, statusBadge } from './shared.js';
 
 export const PAGE_SIZE = 50;
 
@@ -77,6 +77,9 @@ export function renderInvoiceList(container, { query = '', signal } = {}) {
     text: 'Load more'
   });
 
+  // For button handlers: an unexpected error is shown instead of being lost.
+  const loadPageSafely = offset => loadPage(offset).catch(err => showUnexpectedError(results, err));
+
   async function loadPage(offset) {
     if (offset === 0) results.replaceChildren(loading('Loading invoices…'));
     else loadMore.disabled = true;
@@ -88,7 +91,7 @@ export function renderInvoiceList(container, { query = '', signal } = {}) {
       if (isAbort(error)) return;
       const banner = errorBanner(`Could not load invoices. ${error.message}`, () => {
         banner.remove();
-        loadPage(offset);
+        loadPageSafely(offset);
       });
       if (offset === 0) results.replaceChildren(banner);
       else {
@@ -110,7 +113,7 @@ export function renderInvoiceList(container, { query = '', signal } = {}) {
     rows.append(...page.map(invoiceRow));
 
     loadMore.disabled = false;
-    loadMore.onclick = () => loadPage(offset + page.length);
+    loadMore.onclick = () => loadPageSafely(offset + page.length);
     if (page.length === PAGE_SIZE) results.append(loadMore);
     else loadMore.remove();
   }

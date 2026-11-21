@@ -1,7 +1,7 @@
 import { getInvoice } from '../api.js';
 import { el } from '../dom.js';
 import { formatMoney, formatTaxRate } from '../money.js';
-import { errorBanner, formatDateTime, isAbort, link, loading, statusBadge } from './shared.js';
+import { errorBanner, formatDateTime, isAbort, link, loading, showUnexpectedError, statusBadge } from './shared.js';
 
 function itemsTable(invoice) {
   const money = cents => el('td', { class: 'px-3 py-2 text-right tabular-nums', text: formatMoney(cents) });
@@ -78,7 +78,7 @@ export async function renderInvoiceDetail(container, { id, signal } = {}) {
       ]));
     } else {
       container.replaceChildren(errorBanner(`Could not load this invoice. ${error.message}`, () => {
-        renderInvoiceDetail(container, { id, signal });
+        renderInvoiceDetail(container, { id, signal }).catch(err => showUnexpectedError(container, err));
       }));
     }
     return null;

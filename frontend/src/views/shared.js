@@ -42,3 +42,13 @@ export function errorBanner(message, onRetry) {
 }
 
 export const isAbort = error => error?.name === 'AbortError';
+
+/**
+ * Shows a generic message for an unexpected error (a bug, not an API error,
+ * which each view already handles). Without this, a failed async render would
+ * be an unhandled promise rejection and the page would stay on "Loading…".
+ */
+export function showUnexpectedError(container, error) {
+  console.error(error);
+  container.replaceChildren(errorBanner('Something went wrong while showing this page. Reload to try again.'));
+}

@@ -192,7 +192,7 @@ export function renderInvoiceForm(container, { onCreated }) {
       const description = text(input('description'), `${prefix}.description`, DESCRIPTION_MAX);
 
       const quantityText = input('quantity').value.trim();
-      const quantity = /^\d+$/.test(quantityText) ? Number(quantityText) : NaN;
+      const quantity = /^\d+$/.test(quantityText) ? Number(quantityText) : Number.NaN;
       if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > QUANTITY_MAX) {
         errors.push([`${prefix}.quantity`, 'Enter a whole number from 1 to 1,000,000.']);
       }
