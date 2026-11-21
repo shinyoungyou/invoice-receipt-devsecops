@@ -24,16 +24,9 @@ async function readJson(response) {
   }
 }
 
-async function request(path, { method = 'GET', body, signal } = {}) {
-  const init = { method, signal, headers: { Accept: 'application/json' } };
-  if (body !== undefined) {
-    init.headers['Content-Type'] = 'application/json';
-    init.body = JSON.stringify(body);
-  }
-
-  let response;
+async function send(path, init) {
   try {
-    response = await fetch(`${API_BASE}${path}`, init);
+    return await fetch(`${API_BASE}${path}`, init);
   } catch (err) {
     if (err?.name === 'AbortError') throw err;
     throw new ApiError({
@@ -42,36 +35,46 @@ async function request(path, { method = 'GET', body, signal } = {}) {
       message: 'Could not reach the server. Check your connection and try again.'
     });
   }
+}
 
-  const data = await readJson(response);
-
-  if (response.ok) {
-    if (data === null) {
-      throw new ApiError({
-        status: response.status,
-        code: 'UNEXPECTED_RESPONSE',
-        message: 'The server sent an unexpected response.'
-      });
-    }
-    return data;
-  }
-
-  // Backend errors use {"error":{"code","message","field?"}}.
-  const error = data?.error;
+// Turns a failed response into an ApiError.
+// Backend errors use {"error":{"code","message","field?"}}.
+async function errorFrom(response) {
+  const error = (await readJson(response))?.error;
   if (error && typeof error.code === 'string' && typeof error.message === 'string') {
-    throw new ApiError({
+    return new ApiError({
       status: response.status,
       code: error.code,
       message: error.message,
       field: typeof error.field === 'string' ? error.field : null
     });
   }
-
-  throw new ApiError({
+  return new ApiError({
     status: response.status,
     code: 'UNEXPECTED_RESPONSE',
     message: `The server returned an unexpected error (HTTP ${response.status}).`
   });
+}
+
+async function request(path, { method = 'GET', body, signal } = {}) {
+  const init = { method, signal, headers: { Accept: 'application/json' } };
+  if (body !== undefined) {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
+
+  const response = await send(path, init);
+  if (!response.ok) throw await errorFrom(response);
+
+  const data = await readJson(response);
+  if (data === null) {
+    throw new ApiError({
+      status: response.status,
+      code: 'UNEXPECTED_RESPONSE',
+      message: 'The server sent an unexpected response.'
+    });
+  }
+  return data;
 }
 
 function invoicePath(id, suffix = '') {
@@ -103,4 +106,32 @@ export function getUsdEstimate(id, options) {
 // Takes no body: the server charges the stored CAD total, never a client amount.
 export function startCheckout(id, options) {
   return request(invoicePath(id, '/checkout'), { ...options, method: 'POST' });
+}
+
+// Keeps only characters that are safe in a downloaded file name.
+function receiptFilename(response, fallback) {
+  const match = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '');
+  const name = (match?.[1] ?? fallback).replaceAll(/[^\w.-]/g, '_');
+  return name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`;
+}
+
+/**
+ * Downloads the PDF receipt of a paid invoice. Resolves to { blob, filename }.
+ * Fails with ApiError, e.g. code INVOICE_NOT_PAID before payment is confirmed.
+ */
+export async function downloadReceipt(id, { signal, fallbackName = 'receipt' } = {}) {
+  const response = await send(invoicePath(id, '/receipt'), {
+    signal,
+    headers: { Accept: 'application/pdf' }
+  });
+  if (!response.ok) throw await errorFrom(response);
+
+  if (!(response.headers.get('Content-Type') ?? '').startsWith('application/pdf')) {
+    throw new ApiError({
+      status: response.status,
+      code: 'UNEXPECTED_RESPONSE',
+      message: 'The server did not send a PDF receipt.'
+    });
+  }
+  return { blob: await response.blob(), filename: receiptFilename(response, fallbackName) };
 }

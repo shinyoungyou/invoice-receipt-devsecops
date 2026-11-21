@@ -19,3 +19,16 @@ export function isStripeCheckoutUrl(url) {
 export function goToStripeCheckout(url) {
   globalThis.location.assign(url);
 }
+
+// Saves a downloaded file (the PDF receipt) through a temporary link.
+export function saveFile(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}

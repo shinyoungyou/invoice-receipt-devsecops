@@ -1,6 +1,6 @@
-import { getInvoice, startCheckout } from '../api.js';
+import { downloadReceipt, getInvoice, startCheckout } from '../api.js';
 import { el } from '../dom.js';
-import { goToStripeCheckout, isStripeCheckoutUrl } from '../external.js';
+import { goToStripeCheckout, isStripeCheckoutUrl, saveFile } from '../external.js';
 import { formatMoney } from '../money.js';
 import { formatDateTime, isAbort, showUnexpectedError } from './shared.js';
 
@@ -56,6 +56,43 @@ export function showPayment(section, { invoice, checkout = null, signal, onPaid 
   function renderPaid() {
     const prefix = checkout === 'success' ? 'Payment confirmed. ' : '';
     section.replaceChildren(message(`${prefix}Paid on ${formatDateTime(invoice.paidAt)}`, 'success'));
+
+    // The server sets receiptUrl only once the payment is confirmed.
+    if (!invoice.receiptUrl) {
+      section.append(el('p', { class: 'text-sm text-slate-600', text: 'The receipt is not available yet.' }));
+      return;
+    }
+    const button = el('button', {
+      type: 'button',
+      class: 'download-receipt rounded-md border border-slate-300 bg-white px-4 py-2 font-medium hover:bg-slate-100 disabled:opacity-60',
+      text: 'Download receipt (PDF)',
+      onclick: () => run(() => saveReceipt(button))
+    });
+    const receiptError = el('p', { role: 'alert', class: 'receipt-error text-sm text-red-700', hidden: true });
+    section.append(button, receiptError);
+  }
+
+  async function saveReceipt(button) {
+    const receiptError = section.querySelector('.receipt-error');
+    receiptError.hidden = true;
+    button.disabled = true;
+    button.textContent = 'Preparing receipt…';
+    try {
+      const { blob, filename } = await downloadReceipt(invoice.id, {
+        signal,
+        fallbackName: `receipt-${invoice.invoiceNumber}`
+      });
+      saveFile(blob, filename);
+    } catch (error) {
+      if (isAbort(error)) return;
+      receiptError.textContent = error.code === 'INVOICE_NOT_PAID'
+        ? 'The receipt is available once the payment is confirmed.'
+        : `Could not download the receipt. ${error.message}`;
+      receiptError.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Download receipt (PDF)';
+    }
   }
 
   function renderPayButton(notice) {
