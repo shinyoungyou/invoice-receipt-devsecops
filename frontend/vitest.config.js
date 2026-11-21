@@ -7,7 +7,10 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.js'],
-      reporter: ['text', 'lcov'],
+      // Paths in lcov.info are written relative to the repo root
+      // (frontend/src/...), matching backend/coverage/lcov.info, because
+      // SonarQube scans the whole repository from the root.
+      reporter: ['text', ['lcov', { projectRoot: '..' }]],
       reportsDirectory: 'coverage'
     }
   }
