@@ -120,9 +120,8 @@ export function showPayment(section, { invoice, checkout = null, signal, onPaid 
       if (attempt > 0) {
         try {
           await delay(POLL_INTERVAL_MS, signal);
-        } catch (error) {
-          if (isAbort(error)) return;
-          throw error;
+        } catch {
+          return; // delay only rejects when the page is left
         }
       }
 

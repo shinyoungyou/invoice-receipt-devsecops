@@ -46,12 +46,17 @@ test('/invoices/new shows the form', async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-test('a Stripe return URL loads that invoice', async () => {
-  await start('/invoices/inv_1?checkout=success', () => jsonResponse(200, invoice()));
+test('a Stripe return URL loads that invoice and passes on the checkout result', async () => {
+  await start('/invoices/inv_1?checkout=success', () => jsonResponse(200, invoice({
+    status: 'paid',
+    paidAt: '2026-11-19T19:30:00.000Z',
+    receiptUrl: '/api/invoices/inv_1/receipt'
+  })));
 
   await vi.waitFor(() => expect(heading()).toBe('Invoice INV-0001'));
   expect(fetchMock.mock.calls[0][0]).toBe('/api/invoices/inv_1');
   expect(document.title).toBe('INV-0001 · Invoice and Receipt Generator');
+  expect(app().querySelector('.payment-message').textContent).toMatch(/^Payment confirmed\. Paid on /);
 });
 
 test('a missing invoice keeps the generic title', async () => {

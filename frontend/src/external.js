@@ -17,5 +17,5 @@ export function isStripeCheckoutUrl(url) {
 }
 
 export function goToStripeCheckout(url) {
-  window.location.assign(url);
+  globalThis.location.assign(url);
 }
