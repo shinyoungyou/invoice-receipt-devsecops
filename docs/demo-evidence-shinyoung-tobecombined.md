@@ -9,6 +9,25 @@ until they are filled in from real runs.
 
 Screenshots and logs go in `docs/evidence/` with the `m1-` prefix.
 
+## Summary: from first failure to passing gate
+
+All scans used a local SonarQube Community Build (v26.11) with project
+`invoice-frontend-dev`. All CI runs are the **Frontend checks** job on
+`feature/frontend`.
+
+| # | When | What ran | Result | Entry |
+| --- | --- | --- | --- | --- |
+| 1 | Nov 19, 12:33 | First SonarQube scan of `2401950` | **Finding.** 4 open issues (3 × `javascript:S9383`, 1 × `javascript:S7773`), Reliability C. The gate passed because a first analysis has no new code to judge | E01 |
+| 2 | Nov 19, 13:27 | Local tests before the fix | **Failure.** The 4 new regression tests failed against the unfixed source, with 4 unhandled rejections | E01 |
+| 3 | Nov 19, 13:27 | Frontend CI on `f8d5a4c` | **Failure.** The commit contained only the tests; the source fix was still in `git stash`. 4 failed, 133 passed | E02 |
+| 4 | **TODO** | Frontend CI on the follow-up commit (**TODO** hash) | **TODO**, expected green | E02 |
+| 5 | Nov 21, 1:43 PM | Second SonarQube scan, after the follow-up commit | **Quality gate failed.** The fix introduced 1 new `S9383` issue (`invoice-list.js:94`). "New issues" was 1, and the gate requires 0 | E03 |
+| 6 | **TODO** | Commit 11b (**TODO** hash), then the third scan | **TODO**, expected: gate passed, 0 new issues, Reliability A | E03 |
+
+The story in one sentence: SonarQube found a reliability risk, the tests
+reproduced it, CI caught an incomplete fix commit, and the quality gate caught
+a new issue introduced by the fix itself, before any of it reached `main`.
+
 ## Evidence E01 — SonarQube found unhandled promises in the frontend
 
 | Field | Actual value |
@@ -34,6 +53,7 @@ Screenshots and logs go in `docs/evidence/` with the `m1-` prefix.
 | Duplications | 0.0% |
 | Security / Reliability / Maintainability | 0 / 4 (rated C) / 1 open issues |
 | Security hotspots | 0 |
+| Lines of code | 631 |
 
 The dashboard also showed SonarQube's own "Limited security analysis" notice:
 Community Build does not scan for injection vulnerabilities such as SQL
@@ -69,8 +89,8 @@ the codebase.
 - `docs/evidence/m1-sonar-first-scan.png`: dashboard with Reliability C and 4 issues
 - `docs/evidence/m1-sonar-issue-list.png`: all four issues
 - `docs/evidence/m1-sonar-s9383-main-js.png`: issue detail with rule ID and line 55
-- `docs/evidence/m1-sonar-s7773-form.png`: **TODO** (must be taken before the rescan)
-- `docs/evidence/m1-tests-before-fix.png`: **TODO**, if the terminal output is still available. The four new regression tests run against the unfixed source with `git stash push -- frontend/src`. Result: 4 failed, 133 passed, 4 unhandled errors
+- `docs/evidence/m1-sonar-s7773-form.png`: **TODO**, if it was captured before the second scan
+- `docs/evidence/m1-tests-before-fix.png`: **TODO**, if the terminal output is still available. The 4 new regression tests run against the unfixed source with `git stash push -- frontend/src`. Result: 4 failed, 133 passed, 4 unhandled errors
 
 **Fix or review decision:**
 
@@ -84,21 +104,14 @@ Four regression tests feed malformed server data (`items: null`, non-integer
 `totalCents`) and check that the message appears instead of an endless
 loading state.
 
-The fix landed in two commits; see E02:
+The fix landed in three commits:
 
-- `f8d5a4c`: regression tests only, by mistake
+- `f8d5a4c`: regression tests only, by mistake (see E02)
 - **TODO** follow-up commit hash: source changes
+- **TODO** 11b commit hash: corrects a new issue the fix introduced (see E03)
 
-**Verification:**
-
-- Local: `npm test` in `frontend/` reports 137 passed, 0 failed on the fixed source. **TODO:** confirm on the follow-up commit.
-- CI: **TODO**, the Frontend CI run link for the follow-up commit (green).
-- Rescan: **TODO**, the date and results. Expected: the S9383 and S7773 issues closed, Reliability A, and the gate passed on new code.
-
-**After evidence:**
-
-- `docs/evidence/m1-sonar-after-dashboard.png`: **TODO**
-- `docs/evidence/m1-sonar-after-closed-issues.png`: **TODO** (Issues filtered to Closed)
+**Verification and after evidence:** see E03. The second scan showed the
+fix's effect, and the third scan is the final result.
 
 **Presentation talking points:**
 
@@ -168,3 +181,83 @@ Follow-up commit: **TODO**
 3. **What changed:** the source changes went in as a follow-up commit, without force-pushing.
 4. **What shows the outcome:** a red run on `f8d5a4c` and a green run on the follow-up.
 5. **What it did not prove:** CI only checks what the tests cover. It caught this because the regression tests were written first.
+
+## Evidence E03 — Quality gate failed on a new issue introduced by the fix
+
+| Field | Actual value |
+| --- | --- |
+| Member and feature | Member 1. Invoice list retry and Load more (`frontend/src/views/invoice-list.js`) |
+| Date and branch | November 21, 2026, `feature/frontend` |
+| Failing commit / PR | The E02 follow-up commit (**TODO** hash) |
+| Tool and command or scan configuration | Same local SonarQube project and scanner command as E01. Second analysis of the project. New code period: since November 19, 2026, the first analysis |
+| Test name or SonarQube rule ID | `javascript:S9383` (Promises should not be left unhandled), 1 new issue |
+| Reported classification and severity, if applicable | Reliability, Medium. Code attribute: Intentionality (not logical) |
+| Failure / finding / warning message | Quality gate **Failed**, with 1 failed condition: "New issues: 1, Required = 0". The issue was at `src/views/invoice-list.js:94`: `loadPageSafely(offset);` |
+| Expected behavior | The fix closes the original issues without adding new ones |
+| Observed behavior | The new helper `loadPageSafely` returned the promise from `loadPage(offset).catch(...)`. The bare call in the retry button left that returned promise unused, so the rule flagged it |
+| CI or scan link | Local server only. Second scan: November 21, 2026, 1:43 PM |
+| Did it actually block merge or release? How? | Locally, the gate failed. The local gate is not wired to merging, so it did not block anything by itself. It was fixed before the PR |
+
+**Second scan results (new code):**
+
+| Measure | Reported result | Gate condition |
+| --- | --- | --- |
+| Quality gate | **Failed**, 1 condition | |
+| New issues | **1** | Required = 0 (failed) |
+| Coverage on new code | 95.7% on 15 new lines to cover | Required ≥ 80.0% (passed) |
+| Duplications on new code | 0.0% on 100 new lines | Required ≤ 3.0% (passed) |
+| Security hotspots | 0 | |
+| Lines of code | 645 | |
+
+This was the first analysis where the gate judged new code. The first scan
+in E01 had nothing to judge.
+
+**Cause and impact:**
+
+The returned promise could not actually reject, because `.catch` already
+handled the error. So this was closer to a false positive than a real bug.
+The code was still ambiguous, though: a reader, and the analyzer, could not
+tell at the call site that nothing was left unhandled. A one-line change made
+the intent explicit, so fixing it was better than marking it "Accepted."
+
+**Before evidence:**
+
+- `docs/evidence/m1-sonar-gate-failed-new-code.png`: New Code tab with the gate Failed, "New issues 1, Required = 0", coverage 95.7%
+- `docs/evidence/m1-sonar-s9383-list-l94.png`: issue detail at `invoice-list.js:94`, with rule `javascript:S9383`
+
+**Fix or review decision:**
+
+Commit 11b (**TODO** hash), `fix: stop returning the retry promise from
+loadPageSafely`. `loadPageSafely` became a function that returns nothing:
+
+```js
+function loadPageSafely(offset) {
+  loadPage(offset).catch(err => showUnexpectedError(results, err));
+}
+```
+
+Callers no longer receive a promise, so nothing is left unhandled. Behavior is
+unchanged, and all 137 tests pass.
+
+**Verification:**
+
+- Local: `npm test` in `frontend/` reports 137 passed, 0 failed on 11b
+- Third scan: **TODO**, the date and results. Expected: gate Passed, 0 new issues
+- Overall code: **TODO**. Expected: Reliability A and 0 open issues, compared with C and 4 in E01
+- Fixed issues: **TODO**. The issue list filtered by status Fixed, `http://localhost:9000/project/issues?id=invoice-frontend-dev&issueStatuses=FIXED`, expected to list the 4 original issues and this one
+
+**After evidence:**
+
+- `docs/evidence/m1-sonar-gate-passed-new-code.png`: **TODO**
+- `docs/evidence/m1-sonar-overall-after.png`: **TODO**
+- `docs/evidence/m1-sonar-fixed-issues.png`: **TODO**
+
+**Presentation talking points:**
+
+1. **What went wrong:** my fix for one finding introduced a new finding of the same rule.
+2. **How it was revealed:** the quality gate's "no new issues" condition. This was the first time the gate had new code to judge.
+3. **What changed:** a one-line refactor so the helper returns nothing.
+4. **What shows the outcome:** gate Failed, then Passed, with the issue moving to Fixed.
+5. **What it did not prove:**
+   - The flagged promise could not actually reject, so the finding was about clarity more than a live bug.
+   - The local gate does not block merges; the team's CI gate on `main` does.
