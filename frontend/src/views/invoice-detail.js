@@ -2,6 +2,7 @@ import { getInvoice } from '../api.js';
 import { el } from '../dom.js';
 import { formatMoney, formatTaxRate } from '../money.js';
 import { errorBanner, formatDateTime, isAbort, link, loading, showUnexpectedError, statusBadge } from './shared.js';
+import { showPayment } from './payment.js';
 import { showUsdEstimate } from './usd-estimate.js';
 
 function itemsTable(invoice) {
@@ -63,8 +64,11 @@ function detailView(invoice) {
   ]);
 }
 
-/** Loads one invoice and renders it, or a not-found / error state. */
-export async function renderInvoiceDetail(container, { id, signal } = {}) {
+/**
+ * Loads one invoice and renders it, or a not-found / error state.
+ * `checkout` is the ?checkout= value Stripe adds when it sends the browser back.
+ */
+export async function renderInvoiceDetail(container, { id, signal, checkout = null } = {}) {
   container.replaceChildren(loading('Loading invoice…'));
 
   let invoice;
@@ -80,13 +84,24 @@ export async function renderInvoiceDetail(container, { id, signal } = {}) {
       ]));
     } else {
       container.replaceChildren(errorBanner(`Could not load this invoice. ${error.message}`, () => {
-        renderInvoiceDetail(container, { id, signal }).catch(err => showUnexpectedError(container, err));
+        renderInvoiceDetail(container, { id, signal, checkout }).catch(err => showUnexpectedError(container, err));
       }));
     }
     return null;
   }
 
+  showInvoice(container, invoice, { signal, checkout });
+  return invoice;
+}
+
+function showInvoice(container, invoice, { signal, checkout }) {
   container.replaceChildren(detailView(invoice));
   showUsdEstimate(container.querySelector('.usd-estimate'), { invoiceId: invoice.id, signal });
-  return invoice;
+  showPayment(container.querySelector('.payment'), {
+    invoice,
+    checkout,
+    signal,
+    // Polling saw the webhook's result: redraw the whole invoice as paid.
+    onPaid: paid => showInvoice(container, paid, { signal, checkout })
+  });
 }

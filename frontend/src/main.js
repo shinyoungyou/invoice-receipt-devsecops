@@ -46,7 +46,8 @@ async function renderRoute(route, signal) {
       break;
     case 'detail': {
       document.title = `Invoice · ${APP_NAME}`;
-      const invoice = await renderInvoiceDetail(app, { id: route.id, signal });
+      const checkout = new URLSearchParams(location.search).get('checkout');
+      const invoice = await renderInvoiceDetail(app, { id: route.id, signal, checkout });
       if (invoice && !signal.aborted) document.title = `${invoice.invoiceNumber} · ${APP_NAME}`;
       break;
     }
