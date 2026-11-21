@@ -50,6 +50,19 @@ jobs:
         with:
           name: backend-lcov
           path: backend/coverage
+      # Frontend coverage is generated here, from the same commit, right before
+      # the scan. sonar-project.properties reads frontend/coverage/lcov.info.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22.23.4
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Generate frontend coverage
+        working-directory: frontend
+        run: npm run test:coverage
       - uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         env:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
