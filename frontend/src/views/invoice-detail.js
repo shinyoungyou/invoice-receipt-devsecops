@@ -2,6 +2,7 @@ import { getInvoice } from '../api.js';
 import { el } from '../dom.js';
 import { formatMoney, formatTaxRate } from '../money.js';
 import { errorBanner, formatDateTime, isAbort, link, loading, showUnexpectedError, statusBadge } from './shared.js';
+import { showUsdEstimate } from './usd-estimate.js';
 
 function itemsTable(invoice) {
   const money = cents => el('td', { class: 'px-3 py-2 text-right tabular-nums', text: formatMoney(cents) });
@@ -57,6 +58,7 @@ function detailView(invoice) {
       ])
     ]),
     itemsTable(invoice),
+    el('section', { class: 'usd-estimate', 'aria-label': 'USD estimate', 'aria-live': 'polite' }),
     el('section', { class: 'payment space-y-3', 'aria-label': 'Payment' })
   ]);
 }
@@ -85,5 +87,6 @@ export async function renderInvoiceDetail(container, { id, signal } = {}) {
   }
 
   container.replaceChildren(detailView(invoice));
+  showUsdEstimate(container.querySelector('.usd-estimate'), { invoiceId: invoice.id, signal });
   return invoice;
 }
