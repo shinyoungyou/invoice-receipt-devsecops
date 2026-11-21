@@ -20,13 +20,17 @@ All scans used a local SonarQube Community Build (v26.11) with project
 | 1 | Nov 19, 12:33 | First SonarQube scan of `2401950` | **Finding.** 4 open issues (3 × `javascript:S9383`, 1 × `javascript:S7773`), Reliability C. The gate passed because a first analysis has no new code to judge | E01 |
 | 2 | Nov 19, 13:27 | Local tests before the fix | **Failure.** The 4 new regression tests failed against the unfixed source, with 4 unhandled rejections | E01 |
 | 3 | Nov 19, 13:27 | Frontend CI on `f8d5a4c` | **Failure.** The commit contained only the tests; the source fix was still in `git stash`. 4 failed, 133 passed | E02 |
-| 4 | **TODO** | Frontend CI on the follow-up commit (**TODO** hash) | **TODO**, expected green | E02 |
+| 4 | Nov 21 | Frontend CI on the follow-up commit `a9f98a6` | **TODO:** confirm green and add the run link | E02 |
 | 5 | Nov 21, 1:43 PM | Second SonarQube scan, after the follow-up commit | **Quality gate failed.** The fix introduced 1 new `S9383` issue (`invoice-list.js:94`). "New issues" was 1, and the gate requires 0 | E03 |
-| 6 | **TODO** | Commit 11b (**TODO** hash), then the third scan | **TODO**, expected: gate passed, 0 new issues, Reliability A | E03 |
+| 6 | Nov 21 | Commit 11b `de0a6d1`, then the next scans | **Passed.** The scan after `d77c55d` (USD estimate tests) passed with 0 new issues | E03 |
+| 7 | Nov 21 | SonarQube scan of `e4a3f0f` (receipt feature) before its tests were applied | **Quality gate failed.** Coverage on new code was 75.4%, and the gate requires 80% | E04 |
+| 8 | Nov 21 | Commit `f98f29f` (receipt tests), then a rescan | **Passed.** Coverage on new code was 96.9%, with 0 new issues | E04 |
+| 9 | Nov 21 | Full-repository dry run of the team configuration (`03d2515`) on local project `invoice-full-dev` | **Verified.** Backend 94.5% and frontend 98.6% coverage were both imported, with no "Could not resolve" warnings | Pipeline wiring |
 
 The story in one sentence: SonarQube found a reliability risk, the tests
 reproduced it, CI caught an incomplete fix commit, and the quality gate caught
-a new issue introduced by the fix itself, before any of it reached `main`.
+both a new issue introduced by the fix and a feature scanned before its tests,
+before any of it reached `main`.
 
 ## Evidence E01 — SonarQube found unhandled promises in the frontend
 
@@ -107,8 +111,8 @@ loading state.
 The fix landed in three commits:
 
 - `f8d5a4c`: regression tests only, by mistake (see E02)
-- **TODO** follow-up commit hash: source changes
-- **TODO** 11b commit hash: corrects a new issue the fix introduced (see E03)
+- `a9f98a6` (`fix: add source changes missing from f8d5a4c`): source changes
+- `de0a6d1` (`fix: stop returning the retry promise from loadPageSafely`): corrects a new issue the fix introduced (see E03)
 
 **Verification and after evidence:** see E03. The second scan showed the
 fix's effect, and the third scan is the final result.
@@ -163,7 +167,7 @@ SonarQube flagged as S9383.
 The source changes were restored with `git stash pop`, verified locally with
 137 tests passing, and pushed as a follow-up commit. The pushed commit was not
 amended, to avoid force-pushing a shared branch.
-Follow-up commit: **TODO**
+Follow-up commit: `a9f98a6` (`fix: add source changes missing from f8d5a4c`).
 
 **Verification:**
 
@@ -188,7 +192,7 @@ Follow-up commit: **TODO**
 | --- | --- |
 | Member and feature | Member 1. Invoice list retry and Load more (`frontend/src/views/invoice-list.js`) |
 | Date and branch | November 21, 2026, `feature/frontend` |
-| Failing commit / PR | The E02 follow-up commit (**TODO** hash) |
+| Failing commit / PR | `a9f98a6`, the E02 follow-up commit |
 | Tool and command or scan configuration | Same local SonarQube project and scanner command as E01. Second analysis of the project. New code period: since November 19, 2026, the first analysis |
 | Test name or SonarQube rule ID | `javascript:S9383` (Promises should not be left unhandled), 1 new issue |
 | Reported classification and severity, if applicable | Reliability, Medium. Code attribute: Intentionality (not logical) |
@@ -227,7 +231,7 @@ the intent explicit, so fixing it was better than marking it "Accepted."
 
 **Fix or review decision:**
 
-Commit 11b (**TODO** hash), `fix: stop returning the retry promise from
+Commit `de0a6d1`, `fix: stop returning the retry promise from
 loadPageSafely`. `loadPageSafely` became a function that returns nothing:
 
 ```js
@@ -241,9 +245,9 @@ unchanged, and all 137 tests pass.
 
 **Verification:**
 
-- Local: `npm test` in `frontend/` reports 137 passed, 0 failed on 11b
-- Third scan: **TODO**, the date and results. Expected: gate Passed, 0 new issues
-- Overall code: **TODO**. Expected: Reliability A and 0 open issues, compared with C and 4 in E01
+- Local: `npm test` in `frontend/` reports 137 passed, 0 failed on `de0a6d1`
+- Next scheduled scan, after `d77c55d` on November 21, 2026: quality gate **Passed** with 0 new issues. The later scans after `f99ab1e` and `f98f29f` also showed 0 new issues
+- Overall code: **TODO**. Record Reliability and open issues from a screenshot, to compare with C and 4 in E01
 - Fixed issues: **TODO**. The issue list filtered by status Fixed, `http://localhost:9000/project/issues?id=invoice-frontend-dev&issueStatuses=FIXED`, expected to list the 4 original issues and this one
 
 **After evidence:**
@@ -261,3 +265,114 @@ unchanged, and all 137 tests pass.
 5. **What it did not prove:**
    - The flagged promise could not actually reject, so the finding was about clarity more than a live bug.
    - The local gate does not block merges; the team's CI gate on `main` does.
+
+## Evidence E04 — Quality gate failed when a feature was scanned before its tests
+
+| Field | Actual value |
+| --- | --- |
+| Member and feature | Member 1. Receipt download (`frontend/src/api.js`, `external.js`, `views/payment.js`) |
+| Date and branch | November 21, 2026, `feature/frontend` |
+| Failing commit / PR | `e4a3f0f` (`feat: enable receipt download only for paid invoices`) |
+| Tool and command or scan configuration | Same local SonarQube project and scanner command as E01, after `npm run test:coverage` |
+| Test name or SonarQube rule ID | Quality gate condition: coverage on new code ≥ 80.0% |
+| Reported classification and severity, if applicable | Quality gate condition (coverage). No new issues |
+| Failure / finding / warning message | "1 condition failed: 75.4% Coverage is less than 80.0%" |
+| Expected behavior | New code reaches the gate with tests covering it |
+| Observed behavior | The scan ran on the receipt feature before its test commit was applied. `npm run test:coverage` reported 174 tests rather than 186. The uncovered lines were exactly the new receipt code |
+| CI or scan link | Local server only. November 21, 2026, about 2:45 PM |
+| Did it actually block merge or release? How? | Locally, the gate failed. The local gate is not wired to merging. The tests were added before the PR |
+
+**Scan results:**
+
+| Measure | Before (`e4a3f0f`) | After (`f98f29f`) |
+| --- | --- | --- |
+| Quality gate | **Failed** | **Passed** |
+| Coverage on new code | 75.4% on 157 new lines (required ≥ 80.0%) | **96.9%** on the same 157 new lines |
+| New issues | 0 | 0 |
+| Duplications on new code | 0.0% | 0.0% |
+| Lines of code | 922 | 922 |
+
+The analyzed source code was identical in both scans; only `tests/` changed.
+"Lines of code" counts `src/` only.
+
+**Uncovered lines reported by Vitest before the fix:**
+
+| File | Uncovered lines | Code |
+| --- | --- | --- |
+| `src/api.js` | 113–136 | `downloadReceipt` |
+| `src/external.js` | 25–33 | `saveFile` |
+| `src/views/payment.js` | 62–63, 69, 76–94 | Receipt button and download handling |
+
+**Cause and impact:**
+
+This was a process error, not a product bug. The feature commit was scanned
+before the test commit was applied, so the gate measured untested code. This
+is exactly the situation the coverage condition exists to catch: code
+reaching the gate without tests.
+
+The case also shows a limit. SonarQube only knows what the coverage report
+tells it. A missing or stale `lcov.info` produces a wrong coverage result
+just as easily. Commit `3cb54bb` (`ci: generate frontend coverage before
+quality gate`) prevents that in the team pipeline. It generates frontend
+coverage in the same job, immediately before the scan.
+
+**Before evidence:**
+
+- `docs/evidence/m1-sonar-gate-failed-coverage.png`: New Code tab, gate Failed, 75.4%
+- `docs/evidence/m1-coverage-174-tests.png`: **TODO**, optional. The terminal coverage table showing 174 tests and the uncovered receipt lines
+
+**Fix or review decision:**
+
+Commit `f98f29f` (`test: cover receipt availability and rejected receipt
+request`). Its 12 tests cover the PDF download, file-name cleaning, a
+non-PDF response, `409 INVOICE_NOT_PAID`, the receipt button states and
+`saveFile`.
+
+**Verification:**
+
+- Local: `npm run test:coverage` reports 186 passed and 100% line coverage
+- Rescan: quality gate **Passed**, coverage on new code 96.9%, 0 new issues
+
+**After evidence:**
+
+- `docs/evidence/m1-sonar-gate-passed-coverage.png`: New Code tab, gate Passed, 96.9%
+- `docs/evidence/m1-sonar-frontend-final.png`: **TODO**, the Overall Code tab of the finished frontend
+
+**Presentation talking points:**
+
+1. **What went wrong:** a feature was scanned before its tests were applied.
+2. **How it was revealed:** the quality gate's coverage condition on new code.
+3. **What changed:** the tests were applied. The CI job now generates coverage itself right before scanning.
+4. **What shows the outcome:** 75.4% and Failed, then 96.9% and Passed, on the same source lines.
+5. **What it did not prove:** coverage shows lines ran during tests, not that the assertions are meaningful.
+
+## Pipeline wiring verification — frontend coverage in the team SonarQube configuration
+
+This was not a failure. It is a check that the team configuration change
+works before it reaches the shared server.
+
+- **Commit `03d2515`** (`chore: import frontend coverage into SonarQube`) added three things to `sonar-project.properties`:
+  - `frontend/tests` as test code
+  - `frontend/coverage/lcov.info` as a coverage report
+  - `frontend/*.config.js` excluded from coverage
+- **It also changed the frontend coverage report** to write paths relative to the repo root (`frontend/src/...`), matching the backend report.
+- **Commit `3cb54bb`** added frontend coverage generation to the SonarQube job in `backend-core-ci.yml`.
+
+**Dry run:** a full-repository scan from the repo root on the local project
+`invoice-full-dev`, using the team's `sonar-project.properties` with only the
+project key overridden. Run November 21, 2026.
+
+| Measure | Result |
+| --- | --- |
+| Lines of code | 1.7k (backend and frontend) |
+| Coverage, overall | 96.1% (1,235 lines to cover, 48 uncovered; 477 conditions, 19 uncovered) |
+| `backend/` | 94.5% |
+| `frontend/` | 98.6%, 0 uncovered lines |
+| "Could not resolve" warnings | None |
+| Open issues | 1, expected to be Member 2's `javascript:S7773` at `backend/invoices/routes.js:14` (**TODO:** confirm) |
+
+- `docs/evidence/m1-sonar-full-repo-coverage.png`: **TODO**, the Coverage tree with the backend and frontend rows
+
+**After the PR merges:** **TODO.** Record the first `main` run of the
+**SonarQube quality gate** job, including the frontend steps and the gate
+result, with the run link and a screenshot.
