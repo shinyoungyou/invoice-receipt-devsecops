@@ -78,7 +78,10 @@ export function renderInvoiceList(container, { query = '', signal } = {}) {
   });
 
   // For button handlers: an unexpected error is shown instead of being lost.
-  const loadPageSafely = offset => loadPage(offset).catch(err => showUnexpectedError(results, err));
+  // Returns nothing, so callers have no promise left to handle.
+  function loadPageSafely(offset) {
+    loadPage(offset).catch(err => showUnexpectedError(results, err));
+  }
 
   async function loadPage(offset) {
     if (offset === 0) results.replaceChildren(loading('Loading invoices…'));
