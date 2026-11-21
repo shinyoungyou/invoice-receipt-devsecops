@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { abortableFetch, errorResponse, invoice, jsonResponse, summary } from './support/fixtures.js';
+import { abortableFetch, errorResponse, invoice, jsonResponse, summary, withConversion } from './support/fixtures.js';
 
 let fetchMock;
 
 async function start(path, respond = () => jsonResponse(200, [])) {
   history.replaceState(null, '', path);
-  fetchMock = abortableFetch(respond);
+  fetchMock = abortableFetch(withConversion(respond));
   vi.stubGlobal('fetch', fetchMock);
   await import('../src/main.js');
 }

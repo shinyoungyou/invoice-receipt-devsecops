@@ -21,6 +21,26 @@ export function abortableFetch(respond) {
   }));
 }
 
+export function conversion(overrides = {}) {
+  return {
+    invoiceId: 'inv_1',
+    currency: 'CAD',
+    totalCents: 2728,
+    estimatedCurrency: 'USD',
+    estimatedTotalCents: 2182,
+    cadPerUsd: '1.2500',
+    rateDate: '2026-11-09',
+    source: 'Bank of Canada',
+    ...overrides
+  };
+}
+
+// Answers USD estimate requests separately, so tests about the invoice itself
+// do not have to know the detail page also asks for an estimate.
+export function withConversion(respond, respondToConversion = () => jsonResponse(200, conversion())) {
+  return (url, init) => url.includes('/conversion') ? respondToConversion(url, init) : respond(url, init);
+}
+
 export function summary(overrides = {}) {
   return {
     id: 'inv_1',

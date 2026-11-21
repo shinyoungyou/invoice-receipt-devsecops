@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderInvoiceDetail } from '../src/views/invoice-detail.js';
-import { abortableFetch, errorResponse, invoice, jsonResponse } from './support/fixtures.js';
+import { abortableFetch, conversion, errorResponse, invoice, jsonResponse, withConversion } from './support/fixtures.js';
 
 let container;
 
@@ -14,8 +14,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function stubFetch(respond) {
-  const fetchMock = abortableFetch(respond);
+function stubFetch(respond, respondToConversion) {
+  const fetchMock = abortableFetch(withConversion(respond, respondToConversion));
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 }
@@ -157,4 +157,100 @@ test('an unexpected error after retrying shows a message instead of being lost',
   await vi.waitFor(() => expect(text('[role="alert"]')).toContain('Something went wrong while showing this page.'));
   expect(container.querySelector('button.retry')).toBeNull();
   consoleError.mockRestore();
+});
+
+describe('USD estimate', () => {
+  const section = () => container.querySelector('.usd-estimate');
+
+  test('shows the dated Bank of Canada estimate under the CAD totals', async () => {
+    const fetchMock = stubFetch(() => jsonResponse(200, invoice({ id: 'inv/1' })));
+
+    await renderInvoiceDetail(container, { id: 'inv/1' });
+
+    await vi.waitFor(() => expect(section().querySelector('.estimate-amount')).not.toBeNull());
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/invoices/inv%2F1/conversion?currency=USD');
+    expect(section().textContent).toContain('Estimated USD equivalent — charged in CAD: US$21.82');
+    expect(section().textContent).toContain('Bank of Canada rate 1.2500 CAD per USD, Nov 9, 2026.');
+    expect(section().textContent).toContain('the payment is in CAD');
+    expect(text('tfoot')).toContain('$27.28');
+  });
+
+  test('shows the invoice first and a loading note while the estimate is pending', async () => {
+    stubFetch(() => jsonResponse(200, invoice()), () => new Promise(() => {}));
+
+    await renderInvoiceDetail(container, { id: 'inv_1' });
+
+    expect(text('h1')).toBe('Invoice INV-0001');
+    expect(section().textContent).toBe('Checking the USD estimate…');
+  });
+
+  test('when the rate is unavailable the invoice stays usable in CAD and can retry', async () => {
+    let conversionCalls = 0;
+    stubFetch(() => jsonResponse(200, invoice()), () => {
+      conversionCalls += 1;
+      return conversionCalls === 1
+        ? errorResponse(503, 'RATE_UNAVAILABLE', 'Bank of Canada did not return a rate.')
+        : jsonResponse(200, conversion());
+    });
+    await renderInvoiceDetail(container, { id: 'inv_1' });
+
+    await vi.waitFor(() => expect(section().querySelector('.retry-estimate')).not.toBeNull());
+    expect(section().textContent).toContain('The USD estimate is unavailable right now. The invoice is still charged in CAD.');
+    expect(text('tfoot')).toContain('Total (CAD)$27.28');
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+
+    section().querySelector('.retry-estimate').click();
+
+    await vi.waitFor(() => expect(section().textContent).toContain('US$21.82'));
+    expect(conversionCalls).toBe(2);
+  });
+
+  test('other estimate errors show the server message', async () => {
+    stubFetch(
+      () => jsonResponse(200, invoice()),
+      () => errorResponse(422, 'ESTIMATE_OUT_OF_RANGE', 'Converted amount is too large.')
+    );
+
+    await renderInvoiceDetail(container, { id: 'inv_1' });
+
+    await vi.waitFor(() => expect(section().textContent)
+      .toContain('The USD estimate is unavailable. Converted amount is too large. The invoice is still charged in CAD.'));
+  });
+
+  test('shows estimate text from the server as text, not HTML', async () => {
+    stubFetch(() => jsonResponse(200, invoice()), () => jsonResponse(200, conversion({ source: '<img src=x onerror=alert(1)>' })));
+
+    await renderInvoiceDetail(container, { id: 'inv_1' });
+
+    await vi.waitFor(() => expect(section().textContent).toContain('<img src=x onerror=alert(1)> rate'));
+    expect(section().querySelector('img')).toBeNull();
+  });
+
+  test('a malformed estimate shows a message in the estimate area only', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    stubFetch(() => jsonResponse(200, invoice()), () => jsonResponse(200, conversion({ estimatedTotalCents: '21.82' })));
+
+    await renderInvoiceDetail(container, { id: 'inv_1' });
+
+    await vi.waitFor(() => expect(section().textContent).toContain('Something went wrong while showing this page.'));
+    expect(text('h1')).toBe('Invoice INV-0001');
+    expect(consoleError).toHaveBeenCalledWith(expect.any(TypeError));
+    consoleError.mockRestore();
+  });
+
+  test('leaving the page cancels the estimate request', async () => {
+    let estimateSignal;
+    stubFetch(() => jsonResponse(200, invoice()), (url, init) => {
+      estimateSignal = init.signal;
+      return new Promise(() => {});
+    });
+    const controller = new AbortController();
+    await renderInvoiceDetail(container, { id: 'inv_1', signal: controller.signal });
+
+    controller.abort();
+
+    expect(estimateSignal.aborted).toBe(true);
+    await Promise.resolve();
+    expect(section().textContent).toBe('Checking the USD estimate…');
+  });
 });
