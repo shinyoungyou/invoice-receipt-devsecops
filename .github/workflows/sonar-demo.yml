@@ -5,7 +5,7 @@ name: SonarQube Cloud demo
 
 on:
   push:
-    branches: [demo/sonar-gate]
+    branches: [demo/sonar-gate, demo/baseline]
   workflow_dispatch:
 
 permissions:
