@@ -1,9 +1,9 @@
 // DEMO ONLY: lives on the demo/sonar-gate branch and is never merged.
 //
-// A deliberately weak helper for the SonarQube quality gate demo:
-// - it has NO tests, so coverage on new code drops below the gate's 80%;
-// - it does money math with floating-point dollars instead of integer cents,
-//   the exact mistake the real code avoids (see src/money.js).
+// Discount helper for the SonarQube quality gate demo. The first version had
+// no tests and did money math in floating-point dollars, which lost a cent
+// (115 cents came back as 114). It now works in integer cents, like
+// src/money.js, and is covered by tests/discount.test.js.
 
 const DISCOUNT_CODES = {
   STUDENT10: 10,
@@ -17,12 +17,15 @@ export function discountPercent(code) {
   return percent ?? 0;
 }
 
-// Float math: 1.15 * 100 is 114.99999999999999, so Math.floor loses a cent.
+// Integer cents only. The discount is rounded half up to the nearest cent:
+// totalCents * percent is an integer, so (x + 50) / 100 floored is exact.
 export function applyDiscount(totalCents, code) {
-  const dollars = totalCents / 100;
+  if (!Number.isSafeInteger(totalCents) || totalCents < 0) {
+    throw new TypeError(`Expected nonnegative integer cents, got ${totalCents}`);
+  }
   const percent = discountPercent(code);
-  const discounted = dollars - dollars * (percent / 100);
-  return Math.floor(discounted * 100);
+  const discountCents = Math.floor((totalCents * percent + 50) / 100);
+  return totalCents - discountCents;
 }
 
 export function describeDiscount(totalCents, code) {
