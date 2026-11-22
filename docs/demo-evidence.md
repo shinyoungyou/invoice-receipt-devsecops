@@ -10,6 +10,7 @@ the commit, check or scan that shows them. Screenshots are in
 | Member 2 | [Invoices, USD conversion, backend CI and SonarQube](#member-2--invoices-usd-conversion-backend-ci-and-sonarqube) |
 | Member 1 | [Frontend, frontend CI and SonarQube Community Build and Cloud](#member-1--frontend-frontend-ci-and-sonarqube-community-build-and-cloud) |
 | Member 3 | Payments evidence to be added by Member 3 |
+| All | [End-to-end rehearsal](#end-to-end-rehearsal) of the full journey through every member's code |
 
 ## Member 2 — Invoices, USD conversion, backend CI and SonarQube
 
@@ -679,3 +680,53 @@ code, so each deliberate failure was judged on its own lines.
 **Takeaway:** each layer caught something the others missed: tests, CI, the
 local gate, the cloud edition's taint and workflow analysis, GitHub push
 protection, and human review. No single tool covered everything.
+
+## End-to-end rehearsal
+
+On November 22, 2026, the full journey ran on one machine against real
+services: the frontend (Vite dev server, `localhost:5173`), the backend
+(`127.0.0.1:3000`), the Bank of Canada rate service, and a Stripe test-mode
+sandbox. Webhooks were forwarded by `stripe listen` to
+`/api/webhooks/stripe`. The rehearsal touched every member's code: the
+frontend (Member 1), invoices and USD conversion (Member 2), and checkout,
+webhook verification and receipts (Member 3).
+
+| # | Step | Observed result |
+| --- | --- | --- |
+| 1 | Create an invoice: Chicken donair × 2 at $12.99, Fries × 1 at $4.99, 5% tax | Detail page showed **$32.52** total, status **Unpaid**. Totals came from the server |
+| 2 | USD estimate | "Estimated USD equivalent — charged in CAD: **US$22.70**", Bank of Canada rate **1.4325** CAD per USD, dated **Nov 20, 2026** |
+| 3 | **Pay**, then Stripe's **< Back** | Returned to the invoice: "Payment was cancelled. You have not been charged." Still Unpaid |
+| 4 | Pay with the declined test card `4000 0000 0000 0002` | Stripe: "Your card was declined. Try another payment method or card." Stripe recorded `payment_intent.payment_failed` (`card_declined`, `generic_decline`); the invoice stayed Unpaid |
+| 5 | Pay with test card `4242 4242 4242 4242` | Stripe recorded `charge.succeeded` and `payment_intent.succeeded` for 3252 cents CAD |
+| 6 | Webhook delivery | `stripe listen` forwarded `checkout.session.completed` (`evt_1UehhiRA6A8Nnxteh77c1p5K`); the backend answered **`[200] POST http://127.0.0.1:3000/api/webhooks/stripe`** at 13:52:27 |
+| 7 | Receipt | **Download receipt (PDF)** appeared. The PDF's items, total and payment date matched the invoice |
+| 8 | Invoice list | The invoice showed **Paid** |
+
+**Webhook-only payment status, shown in practice:**
+
+The 4242 payment was first made before `stripe listen` was running, so the
+`checkout.session.completed` event did not reach the backend. The invoice
+stayed **Unpaid** even though Stripe showed the payment as complete. After
+the listener started, the event was resent with
+`stripe events resend evt_1UehhiRA6A8Nnxteh77c1p5K`. The backend verified it
+(`[200]`) and only then marked the invoice paid. This confirms the design
+rule: a browser redirect or a completed Stripe page never changes payment
+status; only a verified webhook does.
+
+**Notes:**
+
+- The rehearsal used invoice `INV-980A6325-7BB5-406A-A427-BE69E417BC12`, created during frontend testing on November 21, 2026.
+- Stripe keys and the webhook signing secret were kept in the local `backend/.env` only. Secrets are cropped from the screenshots.
+- A screen recording of the journey is kept outside the repository as a backup for the presentation.
+
+**Evidence:**
+
+- [m1-e2e-1-created.png](evidence/m1-e2e-1-created.png): invoice created, $32.52, Unpaid
+- [m1-e2e-2-usd.png](evidence/m1-e2e-2-usd.png): live USD estimate
+- [m1-e2e-3-cancelled.png](evidence/m1-e2e-3-cancelled.png): cancelled checkout
+- [m1-e2e-4-declined.png](evidence/m1-e2e-4-declined.png): declined card on Stripe's page
+- [m1-e2e-6-paid.png](evidence/m1-e2e-6-paid.png): invoice Paid with the receipt button
+- [m1-e2e-7-webhook-200.png](evidence/m1-e2e-7-webhook-200.png): `stripe listen` forwarding the event, `[200]`
+- [m1-e2e-8-receipt.png](evidence/m1-e2e-8-receipt.png): the PDF receipt
+- [m1-e2e-9-list-paid.png](evidence/m1-e2e-9-list-paid.png): invoice list showing Paid
+
