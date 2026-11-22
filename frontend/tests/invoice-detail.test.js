@@ -28,9 +28,9 @@ test('shows a loading message, then the invoice with server totals', async () =>
   let respond;
   const fetchMock = stubFetch(() => new Promise(resolve => { respond = resolve; }));
 
-  const done = renderInvoiceDetail(container, { id: 'inv/1' });
+  const done = renderInvoiceDetail(container, { id: 'inv_1' });
   expect(text('[role="status"]')).toBe('Loading invoice…');
-  expect(fetchMock.mock.calls[0][0]).toBe('/api/invoices/inv%2F1');
+  expect(fetchMock.mock.calls[0][0]).toBe('/api/invoices/inv_1');
 
   respond(jsonResponse(200, invoice({
     items: [
@@ -114,6 +114,16 @@ test('an unknown invoice shows a not-found page with a way back', async () => {
   expect(container.querySelector('a[data-link]').getAttribute('href')).toBe('/');
 });
 
+test('an unsafe invoice ID in the URL shows the not-found page and sends no request', async () => {
+  const fetchMock = stubFetch(() => jsonResponse(200, invoice()));
+
+  const result = await renderInvoiceDetail(container, { id: '..' });
+
+  expect(result).toBeNull();
+  expect(text('h1')).toBe('Invoice not found');
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
 test('other errors show a banner whose retry loads the invoice', async () => {
   let calls = 0;
   stubFetch(() => {
@@ -163,12 +173,12 @@ describe('USD estimate', () => {
   const section = () => container.querySelector('.usd-estimate');
 
   test('shows the dated Bank of Canada estimate under the CAD totals', async () => {
-    const fetchMock = stubFetch(() => jsonResponse(200, invoice({ id: 'inv/1' })));
+    const fetchMock = stubFetch(() => jsonResponse(200, invoice()));
 
-    await renderInvoiceDetail(container, { id: 'inv/1' });
+    await renderInvoiceDetail(container, { id: 'inv_1' });
 
     await vi.waitFor(() => expect(section().querySelector('.estimate-amount')).not.toBeNull());
-    expect(fetchMock.mock.calls[1][0]).toBe('/api/invoices/inv%2F1/conversion?currency=USD');
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/invoices/inv_1/conversion?currency=USD');
     expect(section().textContent).toContain('Estimated USD equivalent — charged in CAD: US$21.82');
     expect(section().textContent).toContain('Bank of Canada rate 1.2500 CAD per USD, Nov 9, 2026.');
     expect(section().textContent).toContain('the payment is in CAD');

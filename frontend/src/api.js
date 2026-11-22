@@ -77,8 +77,23 @@ async function request(path, { method = 'GET', body, signal } = {}) {
   return data;
 }
 
+// Invoice IDs are server-generated UUIDs. Only URL-safe characters are
+// accepted, so an ID can never be "." or ".." or contain "/". Escaping alone is
+// not enough: encodeURIComponent('..') is still '..', and
+// /api/invoices/../checkout would resolve to /api/checkout. This is a
+// client-side path traversal (CSPT), reported by SonarQube Cloud as
+// jssecurity:S8476.
+const SAFE_ID = /^[A-Za-z0-9_-]{1,100}$/;
+
+export function isSafeInvoiceId(id) {
+  return typeof id === 'string' && SAFE_ID.test(id);
+}
+
 function invoicePath(id, suffix = '') {
-  return `/invoices/${encodeURIComponent(id)}${suffix}`;
+  if (!isSafeInvoiceId(id)) {
+    throw new ApiError({ status: 0, code: 'INVALID_INVOICE_ID', message: 'This invoice link is not valid.' });
+  }
+  return `/invoices/${id}${suffix}`;
 }
 
 export function createInvoice(invoice, options) {

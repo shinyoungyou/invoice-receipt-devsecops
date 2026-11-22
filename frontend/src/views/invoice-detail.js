@@ -76,7 +76,7 @@ export async function renderInvoiceDetail(container, { id, signal, checkout = nu
     invoice = await getInvoice(id, { signal });
   } catch (error) {
     if (isAbort(error)) return null;
-    if (error.code === 'INVOICE_NOT_FOUND') {
+    if (error.code === 'INVOICE_NOT_FOUND' || error.code === 'INVALID_INVOICE_ID') {
       container.replaceChildren(el('div', { class: 'not-found space-y-3' }, [
         el('h1', { class: 'text-2xl font-semibold', tabindex: -1, text: 'Invoice not found' }),
         el('p', { class: 'text-slate-600', text: 'It may have been mistyped, or it does not exist.' }),
