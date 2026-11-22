@@ -4,7 +4,8 @@ A team DevSecOps project for creating CAD invoices, estimating their USD value
 and issuing PDF receipts after verified Stripe test payments. The shared Node.js,
 Express and SQLite backend implements invoice creation, search, details,
 currency estimates, Stripe test checkout, verified webhooks and PDF receipts.
-The frontend is planned.
+A plain HTML, Tailwind CSS and JavaScript frontend (built with Vite) covers the
+whole journey; see the [frontend README](frontend/README.md) to run it.
 
 ## Run the backend
 
@@ -37,7 +38,7 @@ Members 2 and 3 share one Express server, one package.json and one SQLite schema
 
 | Who | What is ready and what comes next |
 | --- | --- |
-| Member 1 | Use the invoice and conversion endpoints for the form, list/search and detail screens. The create request and full response examples are in the [API contract](docs/api-contract.md). See the [frontend handoff](frontend/README.md) for UI setup status. |
+| Member 1 | Use the invoice and conversion endpoints for the form, list/search and detail screens. The create request and full response examples are in the [API contract](docs/api-contract.md). The frontend is implemented and connected to these endpoints; see the [frontend README](frontend/README.md). |
 | Member 3 | Use `getInvoice(db, id)` to read the stored CAD amount and current payment state. Build checkout, webhook handling and receipts against the same records. See the [payment handoff](backend/payments/README.md). |
 | Member 2 | Invoice validation, tax calculations, SQLite persistence, reads/search, USD conversion, tests, backend CI and SonarQube setup are implemented on this branch. The first manual scan is recorded. The open finding still needs review and the team still needs the post-merge CI scan and joint integration rehearsal. See the [invoice implementation](backend/invoices/README.md) and [demo evidence](docs/demo-evidence.md). |
 
@@ -62,9 +63,9 @@ Members 2 and 3 share one Express server, one package.json and one SQLite schema
 
 ## Integration and branches
 
-The invoice and payment backends are merged to `main`. Member 1 updates
-`feature/frontend` from `main` and connects the UI to the real endpoints, then
-the team rehearses the invoice-to-paid-receipt flow together. Use small pull requests into
+The invoice and payment backends are merged to `main`. Member 1's
+`feature/frontend` connects the UI to the real endpoints and merges through one
+pull request; the team rehearses the invoice-to-paid-receipt flow together. Use small pull requests into
 `main`, one teammate review and passing checks. See the [branching strategy](docs/branching-strategy.md).
 
 ## Shared files and security scanning
