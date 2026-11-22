@@ -45,7 +45,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
         with:
           # Reuses the team's sonar-project.properties; only the target changes.
+          # projectVersion = commit SHA, so the "Previous version" new-code
+          # setting judges each push on its own changes.
           args: >
             -Dsonar.organization=shinyoungyou
             -Dsonar.projectKey=shinyoungyou_invoice-receipt-devsecops
+            -Dsonar.projectVersion=${{ github.sha }}
             -Dsonar.qualitygate.wait=true
