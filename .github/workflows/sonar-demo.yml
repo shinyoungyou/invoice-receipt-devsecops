@@ -1,11 +1,12 @@
-# DEMO ONLY. Lives only on the demo/sonar-gate branch, which is never merged.
-# Scans each push into SonarQube Cloud so the presentation can show the
-# quality gate failing (and passing again) inside GitHub Actions.
+# DEMO ONLY. Lives only on the demo branches, which are never merged to main.
+# Runs on a draft pull request from demo/sonar-gate into demo/baseline, so
+# SonarQube Cloud judges only the pull request's changes as new code and the
+# presentation can show the quality gate failing (and passing again).
 name: SonarQube Cloud demo
 
 on:
-  push:
-    branches: [demo/sonar-gate, demo/baseline]
+  pull_request:
+    branches: [demo/baseline]
   workflow_dispatch:
 
 permissions:
@@ -45,10 +46,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
         with:
           # Reuses the team's sonar-project.properties; only the target changes.
-          # projectVersion = commit SHA, so the "Previous version" new-code
-          # setting judges each push on its own changes.
+          # The action detects the pull request and sends its number and base
+          # branch, so new code = this pull request's changes.
           args: >
             -Dsonar.organization=shinyoungyou
             -Dsonar.projectKey=shinyoungyou_invoice-receipt-devsecops
-            -Dsonar.projectVersion=${{ github.sha }}
             -Dsonar.qualitygate.wait=true
