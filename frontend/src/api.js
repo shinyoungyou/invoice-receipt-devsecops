@@ -24,9 +24,27 @@ async function readJson(response) {
   }
 }
 
+// Defense in depth: every request must stay on this site and under /api/.
+// User input (such as the ?q= search text) only ever reaches the query string,
+// through URLSearchParams, but this check refuses any path that would leave
+// the API after URL normalization, whatever its source.
+function apiUrl(path) {
+  const origin = globalThis.location.origin;
+  const url = new URL(`${API_BASE}${path}`, origin);
+  if (url.origin !== origin || !url.pathname.startsWith(`${API_BASE}/`)) {
+    throw new ApiError({
+      status: 0,
+      code: 'INVALID_REQUEST_PATH',
+      message: 'Refused to send a request outside the API.'
+    });
+  }
+  return `${url.pathname}${url.search}`;
+}
+
 async function send(path, init) {
+  const url = apiUrl(path);
   try {
-    return await fetch(`${API_BASE}${path}`, init);
+    return await fetch(url, init);
   } catch (err) {
     if (err?.name === 'AbortError') throw err;
     throw new ApiError({

@@ -94,6 +94,16 @@ describe('requests', () => {
   });
 });
 
+describe('request paths', () => {
+  test('search text stays inside the query string', async () => {
+    fetchMock.mockImplementation(async () => jsonResponse(200, []));
+
+    await listInvoices({ q: '../../admin?x=1#/../checkout' });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/invoices?q=..%2F..%2Fadmin%3Fx%3D1%23%2F..%2Fcheckout');
+  });
+});
+
 describe('errors', () => {
   test('backend error envelope becomes an ApiError with code and field', async () => {
     fetchMock.mockResolvedValue(jsonResponse(400, {
