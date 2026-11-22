@@ -56,17 +56,31 @@ describe('requests', () => {
     ]);
   });
 
-  test('invoice IDs are URL-encoded', async () => {
+  test('accepts server-style invoice IDs in request paths', async () => {
     fetchMock.mockImplementation(async () => jsonResponse(200, {}));
 
-    await getInvoice('inv/../1');
+    await getInvoice('9abe0148-0eb4-418e-b035-b103d88bdbcb');
     await getUsdEstimate('inv_1');
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      '/api/invoices/inv%2F..%2F1',
+      '/api/invoices/9abe0148-0eb4-418e-b035-b103d88bdbcb',
       '/api/invoices/inv_1/conversion?currency=USD'
     ]);
   });
+
+  // Client-side path traversal (jssecurity:S8476): encodeURIComponent('..')
+  // is '..', so /api/invoices/../checkout would reach /api/checkout.
+  test.each(['..', '.', '', 'inv/../1', '../checkout', 'a b', 'inv?x=1', 'inv#x', '%2e%2e', 'x'.repeat(101), undefined, null, 42])(
+    'refuses unsafe invoice ID %j without sending a request',
+    async id => {
+      fetchMock.mockImplementation(async () => jsonResponse(200, {}));
+
+      for (const call of [() => getInvoice(id), () => startCheckout(id), () => getUsdEstimate(id), () => downloadReceipt(id)]) {
+        await expect(Promise.resolve().then(call)).rejects.toMatchObject({ code: 'INVALID_INVOICE_ID' });
+      }
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
 
   test('startCheckout posts without a body so the client cannot set the amount', async () => {
     fetchMock.mockResolvedValue(jsonResponse(201, { checkoutUrl: 'https://checkout.stripe.com/x' }));
@@ -160,10 +174,10 @@ describe('downloadReceipt', () => {
   test('downloads the PDF with the file name from the server', async () => {
     fetchMock.mockResolvedValue(pdf());
 
-    const { blob, filename } = await downloadReceipt('inv/1');
+    const { blob, filename } = await downloadReceipt('inv_1');
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('/api/invoices/inv%2F1/receipt');
+    expect(url).toBe('/api/invoices/inv_1/receipt');
     expect(init.headers.Accept).toBe('application/pdf');
     expect(await blob.text()).toBe('%PDF-1.4 demo');
     expect(filename).toBe('receipt-INV-0001.pdf');
