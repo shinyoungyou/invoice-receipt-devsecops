@@ -20,11 +20,16 @@ export function getInvoice(db, id) {
   return { ...withReceiptUrl(row), items };
 }
 
+// DEMO ONLY (demo/sonar-gate, never merged): the search term is pasted into
+// the SQL text instead of being bound as a ? parameter. This is a deliberate
+// SQL injection for the SonarQube demo (topic doc, Scenario 1). The real code
+// on main binds q as a parameter.
 export function listInvoices(db, { q, limit, offset }) {
+  const term = q.toLowerCase();
   const rows = db.prepare(`SELECT ${summaryColumns} FROM invoices
-    WHERE instr(lower(invoice_number), lower(?)) > 0 OR instr(lower(seller_name), lower(?)) > 0
-       OR instr(lower(customer_name), lower(?)) > 0
-    ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`).all(q, q, q, limit, offset);
+    WHERE instr(lower(invoice_number), '${term}') > 0 OR instr(lower(seller_name), '${term}') > 0
+       OR instr(lower(customer_name), '${term}') > 0
+    ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`).all(limit, offset);
   return rows.map(withReceiptUrl);
 }
 
