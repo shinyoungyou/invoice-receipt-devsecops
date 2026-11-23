@@ -2,7 +2,7 @@
 
 Each member records real failures, findings and fixes from their own work, with
 the commit, check or scan that shows them. Screenshots are in
-[`docs/evidence/`](evidence/). The format follows
+[`docs/evidence/`](https://github.com/shinyoungyou/invoice-receipt-devsecops/tree/feature/frontend/docs/evidence). The format follows
 [`demo-evidence-example.md`](demo-evidence-example.md).
 
 | Member | Section |
@@ -189,10 +189,10 @@ the codebase.
 
 **Before evidence:**
 
-- [m1-sonar-first-scan.png](evidence/m1-sonar-first-scan.png): dashboard with Reliability C and 4 issues
-- [m1-sonar-issue-list.png](evidence/m1-sonar-issue-list.png): all four issues
-- [m1-sonar-s9383-main-js.png](evidence/m1-sonar-s9383-main-js.png): issue detail with rule ID and line 55
-- [m1-sonar-s7773-form.png](evidence/m1-sonar-s7773-form.png): issue detail at `invoice-form.js:195`, with rule `javascript:S7773`
+- [m1-sonar-first-scan.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-first-scan.png): dashboard with Reliability C and 4 issues
+- [m1-sonar-issue-list.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-issue-list.png): all four issues
+- [m1-sonar-s9383-main-js.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-s9383-main-js.png): issue detail with rule ID and line 55
+- [m1-sonar-s7773-form.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-s7773-form.png): issue detail at `invoice-form.js:195`, with rule `javascript:S7773`
 
 The regression tests were also run locally against the unfixed source, using
 `git stash push -- frontend/src`. They gave 4 failed, 133 passed and 4
@@ -261,8 +261,8 @@ SonarQube flagged as S9383.
 
 **Before evidence:**
 
-- [m1-ci-f8d5a4c-failed-tests.png](evidence/m1-ci-f8d5a4c-failed-tests.png): the failing test and `Tests  4 failed | 133 passed (137)`
-- [m1-ci-f8d5a4c-unhandled-rejection.png](evidence/m1-ci-f8d5a4c-unhandled-rejection.png): the `TypeError` stack trace ending in `render src/main.js:37:23`
+- [m1-ci-f8d5a4c-failed-tests.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-ci-f8d5a4c-failed-tests.png): the failing test and `Tests  4 failed | 133 passed (137)`
+- [m1-ci-f8d5a4c-unhandled-rejection.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-ci-f8d5a4c-unhandled-rejection.png): the `TypeError` stack trace ending in `render src/main.js:37:23`
 - The full log of that run is saved outside the repo, because GitHub deletes Actions logs after the retention period
 
 **Fix or review decision:**
@@ -279,7 +279,7 @@ Follow-up commit: `a9f98a6` (`fix: add source changes missing from f8d5a4c`).
 
 **After evidence:**
 
-- [m1-ci-followup-passed.png](evidence/m1-ci-followup-passed.png): the commit list with the red and green checks
+- [m1-ci-followup-passed.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-ci-followup-passed.png): the commit list with the red and green checks
 
 **Presentation talking points:**
 
@@ -329,8 +329,8 @@ the intent explicit, so fixing it was better than marking it "Accepted."
 
 **Before evidence:**
 
-- [m1-sonar-gate-failed-new-code.png](evidence/m1-sonar-gate-failed-new-code.png): New Code tab with the gate Failed, "New issues 1, Required = 0", coverage 95.7%
-- [m1-sonar-s9383-list-l94.png](evidence/m1-sonar-s9383-list-l94.png): issue detail at `invoice-list.js:94`, with rule `javascript:S9383`
+- [m1-sonar-gate-failed-new-code.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-gate-failed-new-code.png): New Code tab with the gate Failed, "New issues 1, Required = 0", coverage 95.7%
+- [m1-sonar-s9383-list-l94.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-s9383-list-l94.png): issue detail at `invoice-list.js:94`, with rule `javascript:S9383`
 
 **Fix or review decision:**
 
@@ -357,10 +357,10 @@ unchanged, and all 137 tests pass.
 
 **After evidence:**
 
-- [m1-sonar-gate-passed-after-fix.png](evidence/m1-sonar-gate-passed-after-fix.png): overview with the gate Passed, 0 issues and 99.4% coverage
-- [m1-sonar-l94-closed-fixed.png](evidence/m1-sonar-l94-closed-fixed.png): the L94 issue marked Closed (Fixed)
-- [m1-sonar-no-open-issues.png](evidence/m1-sonar-no-open-issues.png): "No Issues. Hooray!"
-- [m1-sonar-overall-after.png](evidence/m1-sonar-overall-after.png): Overall Code, with 0 open issues and all ratings A
+- [m1-sonar-gate-passed-after-fix.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-gate-passed-after-fix.png): overview with the gate Passed, 0 issues and 99.4% coverage
+- [m1-sonar-l94-closed-fixed.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-l94-closed-fixed.png): the L94 issue marked Closed (Fixed)
+- [m1-sonar-no-open-issues.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-no-open-issues.png): "No Issues. Hooray!"
+- [m1-sonar-overall-after.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-overall-after.png): Overall Code, with 0 open issues and all ratings A
 
 **Presentation talking points:**
 
@@ -424,7 +424,7 @@ coverage in the same job, immediately before the scan.
 
 **Before evidence:**
 
-- [m1-sonar-gate-failed-coverage.png](evidence/m1-sonar-gate-failed-coverage.png): New Code tab, gate Failed, 75.4%
+- [m1-sonar-gate-failed-coverage.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-gate-failed-coverage.png): New Code tab, gate Failed, 75.4%
 
 **Fix or review decision:**
 
@@ -440,8 +440,8 @@ non-PDF response, `409 INVOICE_NOT_PAID`, the receipt button states and
 
 **After evidence:**
 
-- [m1-sonar-gate-passed-coverage.png](evidence/m1-sonar-gate-passed-coverage.png): New Code tab, gate Passed, 96.9%
-- [m1-sonar-frontend-final.png](evidence/m1-sonar-frontend-final.png): Overall Code of the finished frontend. Gate Passed; Security, Reliability and Maintainability all 0 open issues, rated A; coverage 98.6% on 433 lines to cover; duplications 0.0%; 922 lines of code
+- [m1-sonar-gate-passed-coverage.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-gate-passed-coverage.png): New Code tab, gate Passed, 96.9%
+- [m1-sonar-frontend-final.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-frontend-final.png): Overall Code of the finished frontend. Gate Passed; Security, Reliability and Maintainability all 0 open issues, rated A; coverage 98.6% on 433 lines to cover; duplications 0.0%; 922 lines of code
 
 **Presentation talking points:**
 
@@ -476,8 +476,8 @@ project key overridden. Run November 21, 2026.
 | "Could not resolve" warnings | None |
 | Open issues | 1. This is Member 2's `javascript:S7773` at `backend/invoices/routes.js:14` (`return NaN` in `pageInteger`), introduced before this work. It is not a Member 1 change; Member 2 was told it is still open |
 
-- [m1-sonar-full-repo-coverage.png](evidence/m1-sonar-full-repo-coverage.png): the Coverage tree with the backend and frontend rows
-- [m1-sonar-full-repo-open-issue.png](evidence/m1-sonar-full-repo-open-issue.png): the one open issue, Member 2's S7773
+- [m1-sonar-full-repo-coverage.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-full-repo-coverage.png): the Coverage tree with the backend and frontend rows
+- [m1-sonar-full-repo-open-issue.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-sonar-full-repo-open-issue.png): the one open issue, Member 2's S7773
 
 **After the PR merges:** **TODO.** Record the first `main` run of the
 **SonarQube quality gate** job, including the frontend steps and the gate
@@ -503,7 +503,7 @@ US$22.70" with "Bank of Canada rate 1.4325 CAD per USD, Nov 20, 2026." The
 browser's network tab showed the `conversion?currency=USD` response
 (`estimatedTotalCents: 2270`, `rateDate: "2026-11-20"`). That confirms the
 frontend displays the backend's live Bank of Canada data, not a client-side
-calculation. Screenshot: [m1-usd-estimate-live.png](evidence/m1-usd-estimate-live.png).
+calculation. Screenshot: [m1-usd-estimate-live.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-usd-estimate-live.png).
 
 ### E05 — SonarQube Cloud: CI installs ran dependency lifecycle scripts
 
@@ -545,10 +545,10 @@ workflow files. It reported only Member 2's `S7773`.
 
 **Evidence:**
 
-- [m1-cloud-main-baseline.png](evidence/m1-cloud-main-baseline.png): first Cloud analysis of `main`
-- [m1-cloud-security.png](evidence/m1-cloud-security.png): the two S6505 issues
-- [m1-cloud-security-1.png](evidence/m1-cloud-security-1.png): S6505 in `backend-core-ci.yml`
-- [m1-cloud-security-2.png](evidence/m1-cloud-security-2.png): S6505 in `backend-payments-ci.yml`
+- [m1-cloud-main-baseline.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-main-baseline.png): first Cloud analysis of `main`
+- [m1-cloud-security.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-security.png): the two S6505 issues
+- [m1-cloud-security-1.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-security-1.png): S6505 in `backend-core-ci.yml`
+- [m1-cloud-security-2.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-security-2.png): S6505 in `backend-payments-ci.yml`
 
 ### E06 — SonarQube Cloud: client-side path traversal into `fetch()`
 
@@ -602,15 +602,15 @@ this.
 
 **Evidence:**
 
-- [m1-cloud-s8476-list.png](evidence/m1-cloud-s8476-list.png): the issue on the branch
-- [m1-cloud-s8476-flow.png](evidence/m1-cloud-s8476-flow.png): source `response.json()` to sink `fetch()`
-- [m1-cloud-warnings.png](evidence/m1-cloud-warnings.png): two harmless analysis warnings (ignored `sonar.sources`/`sonar.tests`, and the PL/SQL dictionary)
-- [m1-cloud-s8476-flow2-search.png](evidence/m1-cloud-s8476-flow2-search.png): the remaining flow from `location.search`
-- [m1-cloud-s8476-why.png](evidence/m1-cloud-s8476-why.png), [m1-cloud-s8476-how-to-fix.png](evidence/m1-cloud-s8476-how-to-fix.png), [m1-cloud-s8476-more-info.png](evidence/m1-cloud-s8476-more-info.png): the rule's explanation, fix guidance and CWE-20
-- [m1-cloud-checks-green.png](evidence/m1-cloud-checks-green.png): ✓ 2/2 after the fixes
-- [m1-cloud-baseline-green.png](evidence/m1-cloud-baseline-green.png): the branch gate Passed
-- [m1-cloud-s8476-fixed.png](evidence/m1-cloud-s8476-fixed.png): the issue marked Fixed
-- [m1-a21-a22-frontend-ci-green.png](evidence/m1-a21-a22-frontend-ci-green.png): Frontend CI green on both fixes
+- [m1-cloud-s8476-list.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-list.png): the issue on the branch
+- [m1-cloud-s8476-flow.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-flow.png): source `response.json()` to sink `fetch()`
+- [m1-cloud-warnings.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-warnings.png): two harmless analysis warnings (ignored `sonar.sources`/`sonar.tests`, and the PL/SQL dictionary)
+- [m1-cloud-s8476-flow2-search.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-flow2-search.png): the remaining flow from `location.search`
+- [m1-cloud-s8476-why.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-why.png), [m1-cloud-s8476-how-to-fix.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-how-to-fix.png), [m1-cloud-s8476-more-info.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-more-info.png): the rule's explanation, fix guidance and CWE-20
+- [m1-cloud-checks-green.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-checks-green.png): ✓ 2/2 after the fixes
+- [m1-cloud-baseline-green.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-baseline-green.png): the branch gate Passed
+- [m1-cloud-s8476-fixed.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-cloud-s8476-fixed.png): the issue marked Fixed
+- [m1-a21-a22-frontend-ci-green.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-a21-a22-frontend-ci-green.png): Frontend CI green on both fixes
 
 **Presentation talking points:**
 
@@ -657,13 +657,13 @@ code, so each deliberate failure was judged on its own lines.
 
 **Evidence:**
 
-- [m1-b2-pr-red.png](evidence/m1-b2-pr-red.png): pull request checks failing
-- [m1-b2-gate-failed-coverage.png](evidence/m1-b2-gate-failed-coverage.png): 0.0% coverage on 27 new lines
-- [m1-b2-uncovered-lines.png](evidence/m1-b2-uncovered-lines.png): the untested lines in `discount.js`
-- [m1-b3-pr-green.png](evidence/m1-b3-pr-green.png), [m1-b3-gate-passed-coverage.png](evidence/m1-b3-gate-passed-coverage.png): back to green
-- [m1-b4-pr-green-missed.png](evidence/m1-b4-pr-green-missed.png): gate passed with `Math.random()`
-- [m1-b6-github-push-protection.png](evidence/m1-b6-github-push-protection.png): push blocked
-- [m1-b8-pr-green-missed.png](evidence/m1-b8-pr-green-missed.png): gate passed with a working SQL injection
+- [m1-b2-pr-red.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b2-pr-red.png): pull request checks failing
+- [m1-b2-gate-failed-coverage.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b2-gate-failed-coverage.png): 0.0% coverage on 27 new lines
+- [m1-b2-uncovered-lines.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b2-uncovered-lines.png): the untested lines in `discount.js`
+- [m1-b3-pr-green.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b3-pr-green.png), [m1-b3-gate-passed-coverage.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b3-gate-passed-coverage.png): back to green
+- [m1-b4-pr-green-missed.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b4-pr-green-missed.png): gate passed with `Math.random()`
+- [m1-b6-github-push-protection.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b6-github-push-protection.png): push blocked
+- [m1-b8-pr-green-missed.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-b8-pr-green-missed.png): gate passed with a working SQL injection
 
 ### Community Build and SonarQube Cloud compared
 
@@ -721,12 +721,12 @@ status; only a verified webhook does.
 
 **Evidence:**
 
-- [m1-e2e-1-created.png](evidence/m1-e2e-1-created.png): invoice created, $32.52, Unpaid
-- [m1-e2e-2-usd.png](evidence/m1-e2e-2-usd.png): live USD estimate
-- [m1-e2e-3-cancelled.png](evidence/m1-e2e-3-cancelled.png): cancelled checkout
-- [m1-e2e-4-declined.png](evidence/m1-e2e-4-declined.png): declined card on Stripe's page
-- [m1-e2e-6-paid.png](evidence/m1-e2e-6-paid.png): invoice Paid with the receipt button
-- [m1-e2e-7-webhook-200.png](evidence/m1-e2e-7-webhook-200.png): `stripe listen` forwarding the event, `[200]`
-- [m1-e2e-8-receipt.png](evidence/m1-e2e-8-receipt.png): the PDF receipt
-- [m1-e2e-9-list-paid.png](evidence/m1-e2e-9-list-paid.png): invoice list showing Paid
+- [m1-e2e-1-created.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-1-created.png): invoice created, $32.52, Unpaid
+- [m1-e2e-2-usd.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-2-usd.png): live USD estimate
+- [m1-e2e-3-cancelled.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-3-cancelled.png): cancelled checkout
+- [m1-e2e-4-declined.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-4-declined.png): declined card on Stripe's page
+- [m1-e2e-6-paid.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-6-paid.png): invoice Paid with the receipt button
+- [m1-e2e-7-webhook-200.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-7-webhook-200.png): `stripe listen` forwarding the event, `[200]`
+- [m1-e2e-8-receipt.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-8-receipt.png): the PDF receipt
+- [m1-e2e-9-list-paid.png](https://github.com/shinyoungyou/invoice-receipt-devsecops/blob/feature/frontend/docs/evidence/m1-e2e-9-list-paid.png): invoice list showing Paid
 
