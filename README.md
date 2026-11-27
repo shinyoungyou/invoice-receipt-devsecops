@@ -22,6 +22,30 @@ tests run independently of Stripe and SonarQube. To take a live test-mode
 payment, follow the [payment setup](backend/payments/README.md#run-payments-locally-in-stripe-test-mode). The live USD estimate uses the
 Bank of Canada service.
 
+## Deployment
+
+One Render web service runs the API and serves the built frontend from the
+same origin, so the browser needs no CORS and the frontend's same-origin `/api`
+guard is unchanged. [`render.yaml`](render.yaml) defines the service as a
+Blueprint. Render deploys a commit on `main` only after its GitHub checks pass.
+
+1. In Render, choose **New → Blueprint**, connect this repository and apply
+   `render.yaml`. Enter the four secret values when prompted (steps 2 and 3).
+2. In the Stripe Dashboard (test mode), add a webhook endpoint for
+   `https://<service>.onrender.com/api/webhooks/stripe` with the events
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed` and `checkout.session.expired`.
+   Copy its signing secret (`whsec_…`) to `STRIPE_WEBHOOK_SECRET`, and a test
+   secret key (`sk_test_…`) to `STRIPE_SECRET_KEY`.
+3. Set the return URLs to the deployed site:
+   `CHECKOUT_SUCCESS_URL=https://<service>.onrender.com/invoices/{INVOICE_ID}?checkout=success`
+   and `CHECKOUT_CANCEL_URL=https://<service>.onrender.com/invoices/{INVOICE_ID}?checkout=cancelled`.
+
+Free-plan limits: the service sleeps after 15 minutes without traffic and takes
+about a minute to wake, and its SQLite file is lost on every restart, redeploy
+or sleep. Open the site a few minutes before a demo. Receipts are reachable by
+anyone who knows an invoice ID; use Stripe test mode and fictional data only.
+
 ## Feature ownership
 
 Each member implements, tests and maintains CI checks for their own feature area.

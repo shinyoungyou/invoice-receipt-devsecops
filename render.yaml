@@ -1,0 +1,38 @@
+# Render Blueprint: one web service serves the API and the built frontend
+# from the same origin. Create it from Render's dashboard: New > Blueprint.
+services:
+  - type: web
+    name: invoice-receipt
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    # Deploy a commit on main only after its GitHub checks pass.
+    autoDeployTrigger: checksPass
+    # NODE_ENV=production would skip devDependencies, and Vite is one, so the
+    # frontend install includes them. --ignore-scripts matches CI (S6505).
+    buildCommand: >-
+      cd frontend && npm ci --ignore-scripts --include=dev && npm run build &&
+      cd ../backend && npm ci --ignore-scripts --omit=dev
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.23.4
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      # Free instances have no persistent disk: invoices reset on every
+      # restart, redeploy or spin-down. Acceptable for the demo only.
+      - key: DATABASE_PATH
+        value: ./data/invoices.db
+      # Secrets and URLs are entered in the dashboard, never committed.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CHECKOUT_SUCCESS_URL
+        sync: false
+      - key: CHECKOUT_CANCEL_URL
+        sync: false

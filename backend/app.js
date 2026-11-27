@@ -4,6 +4,7 @@ import { InvoiceValidationError } from './invoices/validation.js';
 import { createUsdRateProvider } from './exchange-rates/usd.js';
 import { paymentRoutes, stripeWebhookRoutes } from './payments/routes.js';
 import { createStripeGateway } from './payments/stripe-gateway.js';
+import { frontendRoutes } from './frontend-static.js';
 
 const app = express();
 app.locals.latestUsdRate = createUsdRateProvider();
@@ -21,6 +22,9 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/invoices', paymentRoutes);
 app.use('/api/invoices', invoiceRoutes);
+
+// The built frontend, when present (production). API paths are never served from it.
+app.use(frontendRoutes());
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.' } });
